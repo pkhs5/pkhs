@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" class="h-full bg-slate-100 select-none">
+<html lang="ja" class="h-full bg-slate-100 select-none overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,721 +9,616 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Vue 3 CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         html, body {
-            height: 100%;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
             touch-action: manipulation;
-        }
-        ::-webkit-scrollbar {
-            display: none;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
+            from { opacity: 0; transform: scale(0.98); }
             to { opacity: 1; transform: scale(1); }
         }
         .animate-fade-in {
             animation: fadeIn 0.15s ease-out forwards;
         }
+        button:active, .room-card:active {
+            transform: scale(0.94);
+            transition: transform 0.05s ease-in-out;
+        }
     </style>
 </head>
-<body class="h-full bg-slate-900 text-slate-800 font-sans antialiased">
+<body class="h-full w-full bg-slate-100 text-slate-800 antialiased flex flex-col overflow-hidden">
+    <!-- 変更: paddingとgapを極力コンパクトにして1画面に完全に収める -->
+    <div id="app" class="h-screen w-screen flex flex-col bg-slate-100 p-1 gap-1 overflow-hidden box-border">
 
-    <div id="app" class="h-full flex flex-col justify-between overflow-hidden bg-slate-100">
-
-        <!-- 1. パスワード認証画面 -->
-        <div v-if="!isAuthenticated" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-95 backdrop-blur-md p-4">
-            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-slate-200">
-                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl">
-                    <i class="fa-solid fa-lock"></i>
+        <!-- ヘッダー部分：高さを極限までコンパクトに -->
+        <header class="bg-white text-slate-800 shadow-sm shrink-0 border border-slate-200 rounded-xl px-2.5 py-1 flex flex-col gap-0.5">
+            <!-- サマリーバー：カウンタ、日付・時間・天気、リセット・引渡等のボタン群を1行に集約 -->
+            <div class="flex items-center justify-between text-[11px] gap-2 flex-wrap sm:flex-nowrap">
+                <!-- 左側：在館・外出などのカウンタ -->
+                <div class="flex items-center space-x-1 shrink-0">
+                    <span class="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                        在館: <strong class="text-emerald-900 font-black text-xs ml-0.5">{{ countStatus.in }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-white text-amber-800 border border-amber-300 font-bold">
+                        外出: <strong class="text-amber-900 font-black text-xs ml-0.5">{{ countStatus.out }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-bold">
+                        長期: <strong class="text-purple-900 font-black text-xs ml-0.5">{{ countStatus.longAbsent }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-800 border border-rose-200 font-bold">
+                        AirPay: <strong class="text-rose-900 font-black text-xs ml-0.5">{{ countStatus.airpay }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-700 border border-slate-300 font-bold">
+                        空室: <strong class="text-slate-900 font-black text-xs ml-0.5">{{ countStatus.vacant }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold">
+                        <i class="fa-solid fa-boxes-packing text-amber-600 mr-0.5"></i>預かり: <strong class="text-indigo-950 font-black text-xs ml-0.5">{{ countStatus.hasItems }}</strong>
+                    </span>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-1">入退出・預かり物管理</h2>
-                <p class="text-sm text-slate-500 mb-6">パスワードを入力してください</p>
-                
-                <form @submit.prevent="login" class="space-y-4">
-                    <div>
-                        <input 
-                            type="password" 
-                            v-model="inputPassword" 
-                            placeholder="パスワードを入力" 
-                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-center text-lg tracking-widest text-slate-800"
-                            autofocus
-                        >
+
+                <!-- 中央：日付、時間、天気を配置 -->
+                <div class="flex items-center justify-center px-1">
+                    <div class="flex items-center space-x-2 text-[11px] px-2.5 py-0.5 rounded-full border bg-slate-50 text-slate-700 border-slate-300 font-bold whitespace-nowrap shadow-2xs">
+                        <div class="flex items-center space-x-1">
+                            <i class="fa-solid fa-calendar-days text-[11px] text-blue-600"></i>
+                            <span>{{ currentDateString }}</span>
+                        </div>
+                        <span class="text-slate-300">|</span>
+                        <div class="flex items-center space-x-1">
+                            <i class="fa-solid fa-clock text-[11px] text-indigo-600"></i>
+                            <span>{{ currentTimeString }}</span>
+                        </div>
+                        <span class="text-slate-300">|</span>
+                        <div class="flex items-center space-x-1">
+                            <i :class="weatherIcon" class="text-[11px]"></i>
+                            <span>{{ currentWeather }}</span>
+                        </div>
                     </div>
-                    <div v-if="loginError" class="text-rose-500 text-sm font-semibold animate-bounce">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i> パスワードが正しくありません
-                    </div>
+                </div>
+
+                <!-- 右側：リセット・引渡・荷物・洗・郵・一括ボタン群 -->
+                <div class="flex items-center gap-1 shrink-0">
                     <button 
-                        type="submit" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-150 active:scale-95 text-base"
+                        @click="openResetModal" 
+                        class="h-6 bg-slate-100 hover:bg-slate-200 active:scale-95 text-rose-600 text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 border border-slate-300 transition whitespace-nowrap"
+                        title="リセットメニュー"
                     >
-                        ログイン
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>リセット</span>
                     </button>
-                </form>
-            </div>
-        </div>
 
-        <!-- 2. アプリヘッダー & サマリーバー -->
-        <header v-if="isAuthenticated" class="bg-slate-900 text-white shadow-md shrink-0 border-b border-slate-800">
-            <!-- 上段: アプリタイトル & 操作ボタン群 -->
-            <div class="px-3 py-1.5 flex items-center justify-between border-b border-slate-800/80 gap-2">
-                <div class="flex items-center space-x-2 shrink-0">
-                    <span class="bg-blue-600 text-white p-1 rounded-lg text-xs flex items-center justify-center w-6 h-6 shadow-sm"><i class="fa-solid fa-building"></i></span>
-                    <h1 class="text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">入退出・預かり物管理</h1>
-                    <div class="flex items-center space-x-1 text-[11px] px-2 py-0.5 rounded-full border bg-emerald-900/60 text-emerald-200 border-emerald-700">
-                        <i class="fa-solid fa-circle-check text-[10px] text-emerald-400"></i>
-                        <span class="font-bold hidden sm:inline">ローカルモード</span>
-                    </div>
-                </div>
-
-                <!-- アクションボタン群 -->
-                <div class="flex items-center space-x-1.5 shrink-0 overflow-x-auto py-0.5">
-                    <!-- 統合引渡処理ボタン -->
                     <button 
                         @click="openUnifiedHandoverModal" 
-                        class="h-7 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[11px] font-black px-3 rounded-md shadow-md flex items-center space-x-1.5 transition border border-emerald-400/40"
+                        class="h-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[11px] font-black px-2 rounded-md shadow-xs flex items-center justify-center space-x-1 transition border border-emerald-500 whitespace-nowrap"
                         title="お預かり物の引渡・クリア処理"
                     >
-                        <i class="fa-solid fa-hand-holding-heart text-[11px]"></i>
-                        <span>引渡処理</span>
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        <span>引渡</span>
                     </button>
 
                     <button 
                         @click="openQuickBatch('parcel')" 
-                        class="h-8 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold px-2.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition border border-blue-400/30 tracking-tight"
+                        class="h-6 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
-                        <i class="fa-solid fa-box text-[11px]"></i>
-                        <span>荷物登録</span>
+                        <i class="fa-solid fa-box"></i>
+                        <span>荷物</span>
                     </button>
                     <button 
                         @click="openQuickBatch('cleaning')" 
-                        class="h-8 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-xs font-bold px-2.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition border border-purple-400/30 tracking-tight"
+                        class="h-6 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
-                        <i class="fa-solid fa-shirt text-[11px]"></i>
-                        <span>クリーニング</span>
+                        <i class="fa-solid fa-shirt"></i>
+                        <span>洗</span>
                     </button>
                     <button 
                         @click="openQuickBatch('mail')" 
-                        class="h-8 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold px-2.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition border border-rose-400/30 tracking-tight"
+                        class="h-6 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
-                        <i class="fa-solid fa-envelope text-[11px]"></i>
-                        <span>郵便登録</span>
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>郵</span>
                     </button>
                     <button 
                         @click="openBatchModal" 
-                        class="h-8 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold px-2.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition border border-indigo-400/30 tracking-tight"
+                        class="h-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
-                        <i class="fa-solid fa-layer-group text-[11px]"></i>
-                        <span>一括登録</span>
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>一括</span>
                     </button>
-                    <button 
-                        @click="openResetModal" 
-                        class="h-8 bg-slate-800 hover:bg-slate-700 active:scale-95 text-rose-400 hover:text-rose-300 text-xs font-bold px-2.5 rounded-lg shadow-sm flex items-center space-x-1.5 border border-slate-700 transition tracking-tight"
-                    >
-                        <i class="fa-solid fa-rotate-left text-[11px]"></i>
-                        <span>リセット</span>
-                    </button>
-                    <button 
-                        @click="logout" 
-                        title="ログアウト"
-                        class="h-8 w-8 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-400 hover:text-white rounded-lg border border-slate-700 flex items-center justify-center transition"
-                    >
-                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 下段: リアルタイム集計サマリーバー -->
-            <div class="bg-slate-950/80 px-3 py-1 flex items-center justify-between text-xs overflow-x-auto gap-2">
-                <div class="flex items-center space-x-2 shrink-0">
-                    <span class="px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-700/80 font-medium">
-                        在館: <strong class="text-white font-black text-xs ml-0.5">{{ countStatus.in }}</strong> 室
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-amber-950/90 text-amber-300 border border-amber-700/80 font-medium">
-                        外出: <strong class="text-white font-black text-xs ml-0.5">{{ countStatus.out }}</strong> 室
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-purple-950/90 text-purple-200 border border-purple-700/80 font-medium">
-                        長期不在: <strong class="text-white font-black text-xs ml-0.5">{{ countStatus.longAbsent }}</strong> 室
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-medium">
-                        空室: <strong class="text-white font-black text-xs ml-0.5">{{ countStatus.vacant }}</strong> 室
-                    </span>
-                </div>
-
-                <div class="flex items-center space-x-2 shrink-0 border-l border-slate-800 pl-2">
-                    <span class="px-2.5 py-0.5 rounded bg-indigo-950/90 text-indigo-200 border border-indigo-700/80 font-bold">
-                        <i class="fa-solid fa-boxes-packing text-amber-400 mr-1"></i>預かり物合計: <strong class="text-yellow-300 font-black text-xs ml-1">{{ countStatus.hasItems }}</strong> 室
-                    </span>
                 </div>
             </div>
         </header>
 
-        <!-- 3. メインフロアグリッド表示 -->
-        <main v-if="isAuthenticated" class="flex-1 p-1.5 flex flex-col justify-between overflow-hidden gap-1">
-            <div 
-                v-for="floor in displayFloors" 
-                :key="floor.name" 
-                :style="{ flex: floor.flexWeight || 1 }"
-                class="flex items-center bg-white rounded-lg p-1 shadow-sm border border-slate-200 min-h-0"
-            >
-                <!-- フロア名ラベル -->
-                <div class="w-12 sm:w-14 shrink-0 flex flex-col items-center justify-center font-bold text-slate-800 border-r border-slate-200 pr-1.5 h-full">
-                    <span class="text-xs sm:text-base tracking-tighter font-black">{{ floor.name }}</span>
-                    <span class="text-[10px] text-slate-400 font-normal">{{ floor.totalRooms }}室</span>
-                </div>
+        <!-- メインフロア表示：高さを完全に最適化して1Fまで見切れないように調整 -->
+        <main class="flex-1 flex flex-col gap-0.5 overflow-y-auto min-h-0 justify-between">
+            <template v-for="floor in displayFloors" :key="floor.name">
+                <div class="flex items-center bg-white rounded-lg px-1.5 py-0.5 shadow-2xs border border-slate-200 shrink-0">
+                    <!-- フロア名ラベル -->
+                    <div class="w-9 sm:w-11 shrink-0 flex flex-col items-center justify-center font-bold text-slate-700 border-r border-slate-200 pr-1 mr-1">
+                        <span class="text-[11px] font-black whitespace-nowrap text-slate-900">{{ floor.name }}</span>
+                    </div>
 
-                <!-- 各フロアのグリッド配置 -->
-                <div class="flex-1 flex flex-col justify-between gap-1 px-1 h-full py-0.5">
-                    <div 
-                        v-for="(rowRooms, rIdx) in floor.rows" 
-                        :key="rIdx" 
-                        class="flex-1 grid gap-1 items-center"
-                        :style="{ gridTemplateColumns: 'repeat(24, minmax(0, 1fr))' }"
-                    >
-                        <div 
-                            v-for="roomNo in rowRooms" 
-                            :key="roomNo"
-                            @click="handleRoomClick(roomNo)"
-                            @touchstart="startPress(roomNo, $event)"
-                            @touchend="cancelPress(roomNo, $event)"
-                            @touchmove="cancelPress(roomNo, $event)"
-                            @mousedown="startPress(roomNo, $event)"
-                            @mouseup="cancelPress(roomNo, $event)"
-                            @mouseleave="cancelPress(roomNo, $event)"
-                            @contextmenu.prevent="openSingleRoomModal(roomNo)"
-                            :class="getRoomCardClass(roomNo)"
-                            class="h-full rounded-md flex flex-col items-center justify-center p-0.5 cursor-pointer transition-all duration-100 select-none border shadow-sm relative overflow-hidden active:scale-95"
-                        >
-                            <!-- 号室番号 -->
-                            <div class="flex items-center justify-center space-x-0.5">
-                                <span 
-                                    class="font-black text-xs sm:text-sm md:text-base leading-none tracking-tighter text-center transition-colors"
-                                    :class="getRoomNumberClass(roomNo)"
-                                >
-                                    {{ roomNo }}
-                                </span>
-                                <i v-if="rooms[roomNo]?.status === 'long_absent' && rooms[roomNo]?.isContracted" class="fa-solid fa-plane text-[9px] sm:text-[10px] text-purple-600"></i>
-                            </div>
+                    <!-- 各階のグリッドエリア：カード高さを調整して収める -->
+                    <div class="flex-1 flex flex-col gap-0.5">
+                        <template v-for="(rowRooms, rIndex) in floor.rows" :key="rIndex">
+                            <div class="grid grid-cols-12 gap-0.5 w-full items-center">
+                                <template v-for="(roomNo, cIdx) in rowRooms" :key="cIdx">
+                                    <div 
+                                        v-if="roomNo"
+                                        @click="handleRoomClick(roomNo)"
+                                        @touchstart="startPress(roomNo, $event)"
+                                        @touchend="cancelPress(roomNo, $event)"
+                                        @touchmove="cancelPress(roomNo, $event)"
+                                        @mousedown="startPress(roomNo, $event)"
+                                        @mouseup="cancelPress(roomNo, $event)"
+                                        @mouseleave="cancelPress(roomNo, $event)"
+                                        @contextmenu.prevent="openSingleRoomModal(roomNo)"
+                                        :class="getRoomCardClass(roomNo)"
+                                        class="room-card h-[29px] sm:h-[31px] rounded-md px-1 py-0.5 flex items-center justify-between cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
+                                    >
+                                        <!-- 号室表示と横に並ぶアイコン群 -->
+                                        <div class="flex items-center space-x-1 shrink-0">
+                                            <span :class="getRoomNumberClass(roomNo)" class="text-[11px] sm:text-xs tracking-tighter font-black whitespace-nowrap select-none leading-none">
+                                                {{ roomNo }}
+                                            </span>
+                                            <!-- 号室のすぐ横に並ぶ荷物等アイコン（大きく視認性アップ） -->
+                                            <div v-if="rooms[roomNo] && (rooms[roomNo].parcel || rooms[roomNo].cleaning || rooms[roomNo].mail)" class="flex items-center space-x-0.5">
+                                                <span 
+                                                    v-if="rooms[roomNo].parcel"
+                                                    class="bg-blue-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
+                                                    title="荷物あり"
+                                                >荷</span>
+                                                <span 
+                                                    v-if="rooms[roomNo].cleaning"
+                                                    class="bg-purple-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
+                                                    title="洗濯あり"
+                                                >洗</span>
+                                                <span 
+                                                    v-if="rooms[roomNo].mail"
+                                                    class="bg-rose-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
+                                                    title="郵便あり"
+                                                >郵</span>
+                                            </div>
+                                        </div>
 
-                            <!-- 預かり物バッジ & 個別受け渡しボタン -->
-                            <div class="flex items-center justify-center space-x-0.5 mt-0.5 min-h-[14px] w-full">
-                                <template v-if="rooms[roomNo] && rooms[roomNo].isContracted">
-                                    <span 
-                                        v-if="rooms[roomNo].parcel"
-                                        @click.stop="quickHandoverSingleItem(roomNo, 'parcel')"
-                                        class="bg-blue-600 hover:bg-blue-400 active:scale-90 text-white font-black text-[10px] sm:text-[11px] px-1 rounded shadow-sm leading-none border border-white cursor-pointer transition transform"
-                                        title="荷物あり（タップで引渡完了・クリア）"
-                                    >荷</span>
-                                    <span 
-                                        v-if="rooms[roomNo].cleaning"
-                                        @click.stop="quickHandoverSingleItem(roomNo, 'cleaning')"
-                                        class="bg-purple-600 hover:bg-purple-400 active:scale-90 text-white font-black text-[10px] sm:text-[11px] px-1 rounded shadow-sm leading-none border border-white cursor-pointer transition transform"
-                                        title="クリーニングあり（タップで引渡完了・クリア）"
-                                    >洗</span>
-                                    <span 
-                                        v-if="rooms[roomNo].mail"
-                                        @click.stop="quickHandoverSingleItem(roomNo, 'mail')"
-                                        class="bg-rose-600 hover:bg-rose-400 active:scale-90 text-white font-black text-[10px] sm:text-[11px] px-1 rounded shadow-sm leading-none border border-white cursor-pointer transition transform"
-                                        title="郵便あり（タップで引渡完了・クリア）"
-                                    >郵</span>
+                                        <!-- 右側のステータスバッジ（AirPayや空室など） -->
+                                        <div class="flex items-center space-x-0.5 shrink-0">
+                                            <span 
+                                                v-if="!rooms[roomNo] || (!rooms[roomNo].isContracted && rooms[roomNo].status !== 'long_absent')" 
+                                                class="text-[10px] text-slate-400 font-bold leading-none"
+                                            >
+                                                空
+                                            </span>
+                                            <i 
+                                                v-else-if="rooms[roomNo].status === 'long_absent'" 
+                                                class="fa-solid fa-plane text-[10px] text-purple-700 animate-pulse"
+                                                title="長期不在"
+                                            ></i>
+                                            <template v-else>
+                                                <span 
+                                                    v-if="rooms[roomNo].isAirpay" 
+                                                    class="px-1 py-0.2 rounded text-[9px] font-black leading-none" 
+                                                    :class="rooms[roomNo].status === 'in' ? 'bg-white text-rose-600' : 'bg-rose-600 text-white'" 
+                                                    title="AirPay"
+                                                >A</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div v-else class="w-full h-full min-h-[29px] pointer-events-none opacity-0"></div>
                                 </template>
-                                <!-- 空室ラベル -->
-                                <span v-else-if="rooms[roomNo] && !rooms[roomNo].isContracted" class="text-[9px] sm:text-[10px] text-slate-400 font-bold leading-none tracking-tighter">
-                                    空室
-                                </span>
                             </div>
-                        </div>
-
-                        <!-- 24列に満たない行の右側スペース穴埋め -->
-                        <div 
-                            v-for="emptyIdx in (24 - rowRooms.length)" 
-                            :key="'empty-' + emptyIdx" 
-                            class="h-full pointer-events-none opacity-0"
-                        ></div>
+                        </template>
                     </div>
                 </div>
-            </div>
+            </template>
         </main>
 
-        <!-- 4. フッター -->
-        <footer v-if="isAuthenticated" class="bg-white border-t border-slate-200 px-3 py-1 flex items-center justify-between text-xs text-slate-600 shrink-0">
-            <div class="flex items-center space-x-3 text-xs">
-                <span class="flex items-center space-x-1">
-                    <span class="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600"></span>
-                    <span class="font-bold text-emerald-800">在館</span>
-                </span>
-                <span class="flex items-center space-x-1">
-                    <span class="w-3.5 h-3.5 rounded bg-white border-2 border-amber-400"></span>
-                    <span class="font-bold text-amber-800">外出</span>
-                </span>
-                <span class="flex items-center space-x-1">
-                    <span class="w-3.5 h-3.5 rounded bg-purple-50 border-2 border-purple-500 flex items-center justify-center text-[9px] text-purple-700 font-bold"><i class="fa-solid fa-plane"></i></span>
-                    <span class="font-bold text-purple-800">長期不在</span>
-                </span>
-                <span class="flex items-center space-x-1">
-                    <span class="w-3.5 h-3.5 rounded bg-slate-200 border border-slate-300"></span>
-                    <span class="text-slate-500">空室</span>
-                </span>
-                
-                <!-- 預かり物内訳表示 -->
-                <div class="flex items-center space-x-2 pl-3 border-l border-slate-300 text-[11px]">
-                    <span class="font-bold text-slate-500">預かり内訳:</span>
-                    <span class="px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded font-bold border border-blue-200">荷物 {{ countStatus.parcel }}室</span>
-                    <span class="px-1.5 py-0.2 bg-purple-100 text-purple-800 rounded font-bold border border-purple-200">洗濯 {{ countStatus.cleaning }}室</span>
-                    <span class="px-1.5 py-0.2 bg-rose-100 text-rose-800 rounded font-bold border border-rose-200">郵便 {{ countStatus.mail }}室</span>
-                </div>
-            </div>
-            <div class="text-[11px] text-slate-400 flex items-center space-x-2 font-medium">
-                <span>タップ: 在館/外出 | 長押し: 詳細設定</span>
-            </div>
-        </footer>
+        <!-- トースト通知 -->
+        <div 
+            v-if="toastMessage" 
+            class="fixed bottom-4 right-4 z-50 bg-slate-900/95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl border border-slate-700 flex items-center space-x-2 animate-fade-in"
+        >
+            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span>{{ toastMessage }}</span>
+        </div>
 
-        <!-- 5.1 単体号室の隠し設定モーダル（長押しで表示） -->
-        <div v-if="showSingleRoomModal && targetRoomNo" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 border border-slate-200">
-                <div class="flex items-center justify-between border-b pb-3 mb-4">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-slate-800 text-white font-black text-lg px-2.5 py-1 rounded-lg">{{ targetRoomNo }}</span>
-                        <h3 class="text-base font-bold text-slate-800">号室設定（管理）</h3>
+        <!-- 統合引渡処理モーダル -->
+        <div v-if="showUnifiedHandoverModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-hand-holding-heart text-emerald-100 text-lg"></i>
+                        <h3 class="font-black text-sm">お預かり物の引渡管理</h3>
                     </div>
-                    <button @click="showSingleRoomModal = false" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-2">
-                        &times;
+                    <button @click="showUnifiedHandoverModal = false" class="text-emerald-100 hover:text-white p-1 text-base">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div class="space-y-4">
-                    <!-- 滞在ステータス設定（契約中のみ） -->
-                    <div v-if="rooms[targetRoomNo]?.isContracted" class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-600 mb-1">滞在ステータス</label>
+                <div class="p-4 space-y-3 overflow-y-auto flex-1">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900">
+                        <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>使い方:</p>
+                        現在お預かり物があるお部屋の一覧です。チェックボックスで選択して一括引渡を行うか、個別クリアボタンを押してください。
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black text-slate-700">預かり物保持中のお部屋 ({{ activeItemRooms.length }}件)</span>
+                            <div class="space-x-3 text-xs">
+                                <button @click="selectAllHandoverRooms(true)" class="text-blue-600 hover:underline font-bold">すべて選択</button>
+                                <span class="text-slate-300">|</span>
+                                <button @click="selectAllHandoverRooms(false)" class="text-slate-500 hover:underline">すべて解除</button>
+                            </div>
+                        </div>
+
+                        <div v-if="activeItemRooms.length === 0" class="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-xs">
+                            現在、お預かり物のあるお部屋はありません。
+                        </div>
+
+                        <div v-else class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            <div 
+                                v-for="item in activeItemRooms" 
+                                :key="item.roomNo"
+                                @click="item.selected = !item.selected"
+                                :class="item.selected ? 'bg-emerald-50/80 border-emerald-400' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'"
+                                class="flex items-center justify-between p-3 rounded-xl border transition cursor-pointer shadow-2xs"
+                            >
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" v-model="item.selected" @click.stop class="w-5 h-5 text-emerald-600 rounded-md bg-white border-slate-300 cursor-pointer">
+                                    <div>
+                                        <span class="font-black text-sm text-slate-900">{{ item.roomNo }}号室</span>
+                                        <div class="flex items-center space-x-1.5 mt-0.5">
+                                            <span v-if="rooms[item.roomNo]?.parcel" class="bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-bold px-1.5 py-0.2 rounded">荷物</span>
+                                            <span v-if="rooms[item.roomNo]?.cleaning" class="bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold px-1.5 py-0.2 rounded">クリーニング</span>
+                                            <span v-if="rooms[item.roomNo]?.mail" class="bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-bold px-1.5 py-0.2 rounded">郵便</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button 
+                                    @click.stop="handoverAllForRoom(item.roomNo)"
+                                    class="bg-white hover:bg-emerald-600 hover:text-white text-slate-700 text-xs font-bold px-3.5 py-2 rounded-lg border border-slate-300 transition shadow-2xs"
+                                >
+                                    個別クリア
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end space-x-2 shrink-0">
+                    <button 
+                        @click="showUnifiedHandoverModal = false"
+                        class="bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-slate-300 transition"
+                    >
+                        閉じる
+                    </button>
+                    <button 
+                        @click="executeHandoverClear"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-5 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-1.5"
+                    >
+                        <i class="fa-solid fa-check"></i>
+                        <span>選択したお部屋の預かり物を引渡完了</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 個別ルーム設定モーダル -->
+        <div v-if="showSingleRoomModalFlag" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col">
+                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-600 text-white font-black px-2.5 py-0.5 rounded text-xs">{{ targetRoomNo }}号室</span>
+                        <h3 class="font-black text-sm">ルーム個別管理</h3>
+                    </div>
+                    <button @click="showSingleRoomModalFlag = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 space-y-3" v-if="rooms[targetRoomNo]">
+                    <div class="space-y-1">
+                        <span class="text-[11px] font-bold text-slate-600 block">ステータス変更</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button 
+                                @click="setRoomContract(true)"
+                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                            >
+                                <i class="fa-solid fa-user-check"></i>
+                                <span>契約中</span>
+                            </button>
+                            <button 
+                                @click="setRoomContract(false)"
+                                :class="!rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-slate-700 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                            >
+                                <i class="fa-solid fa-lock"></i>
+                                <span>空室 (ロック)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <span class="text-[11px] font-bold text-slate-600 block">在室状況 / 長期不在</span>
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
-                                @click="setRoomStatus(targetRoomNo, 'in')"
-                                :class="rooms[targetRoomNo]?.status === 'in' ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-400' : 'bg-white text-slate-600 border'"
-                                class="py-2 rounded-lg text-xs flex items-center justify-center space-x-1 shadow-sm transition"
+                                @click="setRoomStatus('in')"
+                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status === 'in' ? 'bg-emerald-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
-                                <i class="fa-solid fa-house"></i>
+                                <i class="fa-solid fa-house mb-0.5"></i>
                                 <span>在館</span>
                             </button>
                             <button 
-                                @click="setRoomStatus(targetRoomNo, 'out')"
-                                :class="rooms[targetRoomNo]?.status === 'out' ? 'bg-amber-500 text-slate-900 font-bold ring-2 ring-amber-400' : 'bg-white text-slate-600 border'"
-                                class="py-2 rounded-lg text-xs flex items-center justify-center space-x-1 shadow-sm transition"
+                                @click="setRoomStatus('out')"
+                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status === 'out' ? 'bg-amber-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
-                                <i class="fa-solid fa-person-walking-arrow-right"></i>
+                                <i class="fa-solid fa-person-walking-arrow-right mb-0.5"></i>
                                 <span>外出</span>
                             </button>
                             <button 
-                                @click="setRoomStatus(targetRoomNo, 'long_absent')"
-                                :class="rooms[targetRoomNo]?.status === 'long_absent' ? 'bg-purple-600 text-white font-bold ring-2 ring-purple-400' : 'bg-white text-slate-600 border'"
-                                class="py-2 rounded-lg text-xs flex items-center justify-center space-x-1 shadow-sm transition"
+                                @click="setRoomStatus('long_absent')"
+                                :class="rooms[targetRoomNo].status === 'long_absent' ? 'bg-purple-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
-                                <i class="fa-solid fa-plane"></i>
+                                <i class="fa-solid fa-plane mb-0.5"></i>
                                 <span>長期不在</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 契約 / 空室 設定 -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">契約ステータス</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button 
-                                @click="setRoomContract(targetRoomNo, true)"
-                                :class="rooms[targetRoomNo]?.isContracted ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-400' : 'bg-slate-100 text-slate-600 border'"
-                                class="py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-sm transition"
-                            >
-                                <i class="fa-solid fa-user-check"></i>
-                                <span>契約中（使用）</span>
-                            </button>
-                            <button 
-                                @click="setRoomContract(targetRoomNo, false)"
-                                :class="!rooms[targetRoomNo]?.isContracted ? 'bg-slate-700 text-white font-bold ring-2 ring-slate-400' : 'bg-slate-100 text-slate-600 border'"
-                                class="py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-sm transition"
-                            >
-                                <i class="fa-solid fa-user-xmark"></i>
-                                <span>空室（退去）</span>
-                            </button>
-                        </div>
+                    <div class="space-y-1">
+                        <span class="text-[11px] font-bold text-slate-600 block">AirPay (A情報) 管理</span>
+                        <button 
+                            @click="toggleAirpay"
+                            :class="rooms[targetRoomNo].isAirpay ? 'bg-rose-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                            class="w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 border border-slate-300"
+                        >
+                            <i class="fa-solid fa-credit-card"></i>
+                            <span>{{ rooms[targetRoomNo].isAirpay ? 'AirPay適用中 (解除するにはタップ)' : 'AirPay情報を設定する' }}</span>
+                        </button>
                     </div>
 
-                    <!-- 預かり物個別切り替え（契約中のみ） -->
-                    <div v-if="rooms[targetRoomNo]?.isContracted" class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                        <label class="block text-xs font-bold text-slate-600 mb-1">預かり物の個別切り替え・受け渡し</label>
+                    <div class="space-y-1">
+                        <span class="text-[11px] font-bold text-slate-600 block">お預かり物</span>
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
-                                @click="toggleRoomItem(targetRoomNo, 'parcel')"
-                                :class="rooms[targetRoomNo]?.parcel ? 'bg-blue-600 text-white font-black' : 'bg-white text-slate-500 border'"
-                                class="py-2 rounded-lg text-xs font-bold shadow-sm transition flex flex-col items-center justify-center"
-                            >
-                                <span>荷物</span>
-                                <span class="text-[10px] opacity-80">{{ rooms[targetRoomNo]?.parcel ? '【有】' : '【無】' }}</span>
-                            </button>
-                            <button 
-                                @click="toggleRoomItem(targetRoomNo, 'cleaning')"
-                                :class="rooms[targetRoomNo]?.cleaning ? 'bg-purple-600 text-white font-black' : 'bg-white text-slate-500 border'"
-                                class="py-2 rounded-lg text-xs font-bold shadow-sm transition flex flex-col items-center justify-center"
-                            >
-                                <span>洗濯/洗</span>
-                                <span class="text-[10px] opacity-80">{{ rooms[targetRoomNo]?.cleaning ? '【有】' : '【無】' }}</span>
-                            </button>
-                            <button 
-                                @click="toggleRoomItem(targetRoomNo, 'mail')"
-                                :class="rooms[targetRoomNo]?.mail ? 'bg-rose-600 text-white font-black' : 'bg-white text-slate-500 border'"
-                                class="py-2 rounded-lg text-xs font-bold shadow-sm transition flex flex-col items-center justify-center"
-                            >
-                                <span>郵便</span>
-                                <span class="text-[10px] opacity-80">{{ rooms[targetRoomNo]?.mail ? '【有】' : '【無】' }}</span>
-                            </button>
-                        </div>
-
-                        <!-- 個別一括クリアボタン -->
-                        <button 
-                            @click="handoverAllForRoom(targetRoomNo)"
-                            class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg text-xs shadow transition flex items-center justify-center space-x-1.5"
-                        >
-                            <i class="fa-solid fa-check-double"></i>
-                            <span>この号室の預かり物を一括クリア（受け渡し完了）</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mt-5 border-t pt-3 flex justify-end">
-                    <button @click="showSingleRoomModal = false" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs shadow">
-                        設定を閉じる
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5.2 一括登録モーダル -->
-        <div v-if="showBatchModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between border-b pb-3 mb-4">
-                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid" :class="batchModalIcon"></i> {{ batchModalTitle }}
-                        </h3>
-                        <button @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-2">
-                            &times;
-                        </button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <!-- 号室指定入力 -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">
-                                対象号室 <span class="text-slate-400 font-normal">（例: <code>801, 802-805, 全室</code>）</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                v-model="batchTargetInput" 
-                                placeholder="例: 801, 802-805 (空欄または「全室」で全号室対象)" 
-                                class="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none font-bold text-slate-800"
-                                autofocus
-                            >
-                        </div>
-
-                        <!-- 預かり物の選択（複数チェック可能） -->
-                        <div class="bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 space-y-2">
-                            <span class="block text-xs font-black text-indigo-900">付与する預かり物（チェックを入れて登録）:</span>
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-indigo-200 cursor-pointer shadow-sm hover:bg-blue-50">
-                                    <input type="checkbox" v-model="batchItems.parcel" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                                    <span class="text-xs font-bold text-blue-800">荷物</span>
-                                </label>
-                                <label class="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-indigo-200 cursor-pointer shadow-sm hover:bg-purple-50">
-                                    <input type="checkbox" v-model="batchItems.cleaning" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
-                                    <span class="text-xs font-bold text-purple-800">洗濯/洗</span>
-                                </label>
-                                <label class="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-indigo-200 cursor-pointer shadow-sm hover:bg-rose-50">
-                                    <input type="checkbox" v-model="batchItems.mail" class="w-4 h-4 text-rose-600 rounded focus:ring-rose-500">
-                                    <span class="text-xs font-bold text-rose-800">郵便</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 契約ステータス変更オプション -->
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                            <span @mousedown="startBatchVacantPress" @mouseup="cancelBatchVacantPress" @touchstart="startBatchVacantPress" @touchend="cancelBatchVacantPress" class="block text-xs font-bold text-slate-700 select-none">
-                                滞在ステータスの同時変更 <span class="text-[10px] text-slate-400 font-normal">（通常は変更なし）</span>
-                            </span>
-                            <div class="grid grid-cols-4 gap-1">
-                                <button 
-                                    type="button"
-                                    @click="batchContractState = 'noChange'"
-                                    :class="batchContractState === 'noChange' ? 'bg-slate-800 text-white font-bold' : 'bg-white text-slate-600 border'"
-                                    class="py-1.5 rounded-lg text-[11px] shadow-sm transition"
-                                >
-                                    変更なし
-                                </button>
-                                <button 
-                                    type="button"
-                                    @click="batchContractState = 'in'"
-                                    :class="batchContractState === 'in' ? 'bg-emerald-600 text-white font-bold' : 'bg-white text-slate-600 border'"
-                                    class="py-1.5 rounded-lg text-[11px] shadow-sm transition"
-                                >
-                                    在館にする
-                                </button>
-                                <button 
-                                    type="button"
-                                    @click="batchContractState = 'out'"
-                                    :class="batchContractState === 'out' ? 'bg-amber-500 text-slate-900 font-bold' : 'bg-white text-slate-600 border'"
-                                    class="py-1.5 rounded-lg text-[11px] shadow-sm transition"
-                                >
-                                    外出にする
-                                </button>
-                                <button 
-                                    type="button"
-                                    v-if="showVacantOptionInBatch"
-                                    @click="batchContractState = 'vacant'"
-                                    :class="batchContractState === 'vacant' ? 'bg-rose-600 text-white font-bold' : 'bg-white text-rose-600 border border-rose-300'"
-                                    class="py-1.5 rounded-lg text-[11px] shadow-sm transition"
-                                >
-                                    空室にする
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-2 border-t pt-3 mt-4">
-                    <button @click="showBatchModal = false" type="button" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">
-                        キャンセル
-                    </button>
-                    <button @click="executeBatchUpdate" type="button" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-lg transition">
-                        一括登録を実行
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5.3 上部メニュー用：号室指定での個別引渡・受け渡しクリアモーダル -->
-        <div v-if="showHandoverModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
-                <div class="flex items-center justify-between border-b pb-3 mb-4">
-                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-hand-holding-heart text-emerald-600"></i> お預かり物 引渡・クリア処理
-                    </h3>
-                    <button @click="showHandoverModal = false" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-2">
-                        &times;
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    <!-- 引渡し対象の種別選択（ラジオ・タブ） -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">1. 引渡す種別を選択してください</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button 
-                                type="button"
-                                @click="handoverTargetType = 'parcel'"
-                                :class="handoverTargetType === 'parcel' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-400 shadow' : 'bg-slate-100 text-slate-600 border'"
-                                class="py-2 rounded-xl text-xs flex items-center justify-center space-x-1 transition"
+                                @click="toggleRoomItem('parcel')"
+                                :class="rooms[targetRoomNo].parcel ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
                             >
                                 <i class="fa-solid fa-box"></i>
-                                <span>荷物 ({{ countStatus.parcel }})</span>
+                                <span>荷物</span>
                             </button>
                             <button 
-                                type="button"
-                                @click="handoverTargetType = 'cleaning'"
-                                :class="handoverTargetType === 'cleaning' ? 'bg-purple-600 text-white font-bold ring-2 ring-purple-400 shadow' : 'bg-slate-100 text-slate-600 border'"
-                                class="py-2 rounded-xl text-xs flex items-center justify-center space-x-1 transition"
+                                @click="toggleRoomItem('cleaning')"
+                                :class="rooms[targetRoomNo].cleaning ? 'bg-purple-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
                             >
                                 <i class="fa-solid fa-shirt"></i>
-                                <span>洗濯 ({{ countStatus.cleaning }})</span>
+                                <span>洗濯</span>
                             </button>
                             <button 
-                                type="button"
-                                @click="handoverTargetType = 'mail'"
-                                :class="handoverTargetType === 'mail' ? 'bg-rose-600 text-white font-bold ring-2 ring-rose-400 shadow' : 'bg-slate-100 text-slate-600 border'"
-                                class="py-2 rounded-xl text-xs flex items-center justify-center space-x-1 transition"
+                                @click="toggleRoomItem('mail')"
+                                :class="rooms[targetRoomNo].mail ? 'bg-rose-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
                             >
                                 <i class="fa-solid fa-envelope"></i>
-                                <span>郵便 ({{ countStatus.mail }})</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">2. 号室指定（例: <code class="bg-slate-100 px-1 rounded text-emerald-600">801, 802-805</code>）</label>
-                        <input 
-                            type="text" 
-                            v-model="handoverRoomInput" 
-                            placeholder="例: 801" 
-                            class="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-slate-800"
-                        >
-                    </div>
-
-                    <!-- 現在お預かり中の号室クイックピッカー -->
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 max-h-40 overflow-y-auto">
-                        <span class="block text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
-                            <span>選択中の種別のお預かり号室（タップで追加）:</span>
-                            <span class="text-emerald-600 font-black">{{ activeItemRooms.length }}室</span>
-                        </span>
-                        <div v-if="activeItemRooms.length === 0" class="text-xs text-slate-400 text-center py-3 font-medium">
-                            現在この種別の預かり物はありません
-                        </div>
-                        <div v-else class="flex flex-wrap gap-1.5">
-                            <button 
-                                type="button"
-                                v-for="rNo in activeItemRooms" 
-                                :key="rNo"
-                                @click="appendHandoverRoom(rNo)"
-                                class="text-xs bg-white hover:bg-emerald-600 hover:text-white text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition font-bold"
-                            >
-                                {{ rNo }}号室
+                                <span>郵便</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-2 border-t pt-4 mt-5">
-                    <button @click="showHandoverModal = false" type="button" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">
-                        キャンセル
-                    </button>
-                    <button @click="executeHandoverClear" type="button" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center space-x-1.5">
-                        <i class="fa-solid fa-check"></i>
-                        <span>引渡完了（クリア）にする</span>
+                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end">
+                    <button @click="showSingleRoomModalFlag = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
+                        閉じる
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 6. 一括リセット＆管理メニュー専用モーダル -->
-        <div v-if="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 max-h-[90vh] flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between border-b pb-3 mb-4">
-                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-rotate-left text-rose-600"></i> リセット・一括管理メニュー
-                        </h3>
-                        <button @click="showResetModal = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">
-                            &times;
+        <!-- 一括登録モーダル -->
+        <div v-if="showBatchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
+                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                    <div class="flex items-center space-x-2">
+                        <i :class="batchModalIcon" class="text-indigo-600 text-base"></i>
+                        <h3 class="font-black text-sm">{{ batchModalTitle }}</h3>
+                    </div>
+                    <button @click="showBatchModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 space-y-3">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700">対象号室 (例: 101, 205 または 101-105)</label>
+                        <input 
+                            type="text" 
+                            v-model="batchTargetInput"
+                            placeholder="部屋番号を入力" 
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                    </div>
+
+                    <div v-if="batchItems" class="space-y-1">
+                        <span class="block text-xs font-bold text-slate-700">登録種別</span>
+                        <div class="bg-indigo-50 p-3 rounded-xl text-xs font-black text-indigo-900 flex items-center space-x-2 border border-indigo-200">
+                            <i :class="batchModalIcon" class="text-base text-indigo-600"></i>
+                            <span>{{ batchModalTitle }} を登録します</span>
+                        </div>
+                    </div>
+
+                    <div v-else class="space-y-2.5">
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-700">ステータス変更</span>
+                            <select v-model="batchContractState" class="w-full bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-3 py-2.5 text-xs font-bold">
+                                <option value="keep">変更しない（現在のまま）</option>
+                                <option value="contract">契約中にする</option>
+                                <option value="vacant">空室にする（ロック）</option>
+                                <option value="long_absent">長期不在にする（ロック）</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-700">お預かり物追加</span>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
+                                    <input type="checkbox" v-model="batchItemsState.parcel" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
+                                    <span>荷物</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
+                                    <input type="checkbox" v-model="batchItemsState.cleaning" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
+                                    <span>洗濯</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
+                                    <input type="checkbox" v-model="batchItemsState.mail" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
+                                    <span>郵便</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end space-x-2">
+                    <button @click="showBatchModal = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
+                        キャンセル
+                    </button>
+                    <button @click="executeBatchUpdate" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-5 py-2 rounded-lg shadow-sm transition">
+                        実行する
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- リセットメニューモーダル -->
+        <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
+                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate-left text-rose-600 text-base"></i>
+                        <h3 class="font-black text-sm">システムデータ・状態リセット</h3>
+                    </div>
+                    <button @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 space-y-3">
+                    <div class="flex border-b border-slate-200 pb-2 space-x-2">
+                        <button 
+                            @click="resetMenuTab = 'items'" 
+                            :class="resetMenuTab === 'items' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-slate-300 shadow-2xs"
+                        >
+                            預かり物クリア
+                        </button>
+                        <button 
+                            @click="resetMenuTab = 'status'" 
+                            :class="resetMenuTab === 'status' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-slate-300 shadow-2xs"
+                        >
+                            在館 / 外在切替
+                        </button>
+                        <button 
+                            @click="resetMenuTab = 'danger'" 
+                            :class="resetMenuTab === 'danger' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-rose-200 shadow-2xs"
+                        >
+                            一括外出 + 消去
                         </button>
                     </div>
 
-                    <!-- メニュータブ切り替え -->
-                    <div class="flex border-b border-slate-200 mb-4 text-xs font-bold">
-                        <button 
-                            type="button"
-                            @click="resetMenuTab = 'items'"
-                            :class="resetMenuTab === 'items' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400 hover:text-slate-600'"
-                            class="pb-2 px-3 transition flex items-center space-x-1.5"
-                        >
-                            <i class="fa-solid fa-hand-holding-box"></i>
-                            <span>預かり物クリア</span>
-                        </button>
-                        <button 
-                            type="button"
-                            @click="resetMenuTab = 'status'"
-                            :class="resetMenuTab === 'status' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-slate-400 hover:text-slate-600'"
-                            class="pb-2 px-3 transition flex items-center space-x-1.5"
-                        >
-                            <i class="fa-solid fa-house-user"></i>
-                            <span>ステータスリセット</span>
-                        </button>
-                        <button 
-                            type="button"
-                            @click="resetMenuTab = 'danger'"
-                            :class="resetMenuTab === 'danger' ? 'border-b-2 border-rose-600 text-rose-600' : 'text-slate-400 hover:text-slate-600'"
-                            class="pb-2 px-3 transition flex items-center space-x-1.5"
-                        >
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                            <span>全初期化</span>
-                        </button>
-                    </div>
-
-                    <!-- タブ 1: 預かり物クリア -->
                     <div v-if="resetMenuTab === 'items'" class="space-y-3">
-                        <p class="text-xs text-slate-500">
-                            荷物・洗濯物・郵便などの預かり物を一括でクリア（引き渡し完了）します。
+                        <p class="text-xs text-slate-600">
+                            全契約室の【荷物・クリーニング・郵便】の預かり状況をクリア（引き渡し完了）します。
                         </p>
-
-                        <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100 space-y-2">
-                            <span class="block text-xs font-bold text-indigo-900">① 預かり物の一括引き渡し</span>
+                        <div class="space-y-2">
                             <button 
                                 type="button"
                                 @click="resetAllItems" 
-                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow transition flex items-center justify-center space-x-2"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-xs transition flex items-center justify-center space-x-2"
                             >
-                                <i class="fa-solid fa-hand-holding-box text-base"></i>
-                                <span>全室の預かり物を一括引き渡しクリア (現在 {{ countStatus.hasItems }}室)</span>
+                                <i class="fa-solid fa-boxes-packing"></i>
+                                <span>すべての預かり物をクリアする</span>
                             </button>
-                        </div>
-
-                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                            <span class="block text-xs font-bold text-slate-700">② 種別ごとの一括引き渡し</span>
                             <div class="grid grid-cols-3 gap-2">
                                 <button 
                                     type="button"
                                     @click="resetItemCategory('parcel')" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-2 rounded-lg shadow transition flex flex-col items-center"
+                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
                                 >
-                                    <span>荷物のみ全消去</span>
+                                    荷物クリア
                                 </button>
                                 <button 
                                     type="button"
                                     @click="resetItemCategory('cleaning')" 
-                                    class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2 px-2 rounded-lg shadow transition flex flex-col items-center"
+                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
                                 >
-                                    <span>洗濯のみ全消去</span>
+                                    洗濯クリア
                                 </button>
                                 <button 
                                     type="button"
                                     @click="resetItemCategory('mail')" 
-                                    class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 px-2 rounded-lg shadow transition flex flex-col items-center"
+                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
                                 >
-                                    <span>郵便のみ全消去</span>
+                                    郵便クリア
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- タブ 2: ステータスリセット -->
                     <div v-if="resetMenuTab === 'status'" class="space-y-3">
-                        <p class="text-xs text-slate-500">
-                            全契約室の【在館/外出ステータス】を一括でリセットします。（※長期不在の部屋は保持されます）
+                        <p class="text-xs text-slate-600">
+                            全契約室（長期不在を除く）の【在館/外出ステータス】を一括でリセットします。
                         </p>
-
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                             <span class="block text-xs font-bold text-slate-700">【在館 / 外出】一括変更</span>
                             <div class="grid grid-cols-2 gap-2">
                                 <button 
                                     type="button"
                                     @click="resetStatus('in')" 
-                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow transition flex items-center justify-center space-x-1.5"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
                                 >
                                     <i class="fa-solid fa-house"></i>
-                                    <span>全契約室を「在館」にする</span>
+                                    <span>全室「在館」にする</span>
                                 </button>
                                 <button 
                                     type="button"
                                     @click="resetStatus('out')" 
-                                    class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold py-3 px-3 rounded-xl shadow transition flex items-center justify-center space-x-1.5"
+                                    class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
                                 >
                                     <i class="fa-solid fa-person-walking-arrow-right"></i>
-                                    <span>全契約室を「外出」にする</span>
+                                    <span>全室「外出」にする</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- タブ 3: 完全リセット -->
                     <div v-if="resetMenuTab === 'danger'" class="space-y-3">
-                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 space-y-3">
-                            <div class="flex items-center space-x-2 text-rose-800 font-bold text-xs">
-                                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg"></i>
+                        <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 space-y-2.5">
+                            <div class="flex items-center space-x-1.5 text-rose-700 font-bold text-xs">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
                                 <span>【一括リセット】すべての状態を「外出」に変更</span>
                             </div>
-                            <p class="text-xs text-rose-700">
-                                契約中の部屋を「外出」にし、すべての預かり物（荷物・洗濯物・郵便）を一括で全消去します。<br>
-                                <strong>※「空室」および「長期不在」のステータスはそのまま保持されます。</strong>
+                            <p class="text-[11px] text-rose-800/90 leading-relaxed">
+                                契約中の部屋を「外出」にし、すべての預かり物を一括で全消去します。<br>
+                                <strong>※「空室」「長期不在」「AirPay」の情報は保持されます。</strong>
                             </p>
                             <button 
                                 type="button"
                                 @click="resetAllStatusAndItems" 
-                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2"
+                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5"
                             >
                                 <i class="fa-solid fa-rotate-left"></i>
                                 <span>一括「外出」+ 預かり物全消去を実行</span>
@@ -732,441 +627,420 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end border-t pt-4 mt-5">
-                    <button @click="showResetModal = false" type="button" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">
+                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end">
+                    <button @click="showResetModal = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
                         閉じる
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 7. トースト通知メッセージ -->
-        <div 
-            v-if="toastMessage" 
-            class="fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-bold z-50 flex items-center space-x-2 border border-slate-700 animate-fade-in"
-        >
-            <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
-            <span>{{ toastMessage }}</span>
-        </div>
-
     </div>
 
-    <!-- 8. アプリケーションロジック -->
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
 
         createApp({
             setup() {
-                const isAuthenticated = ref(false);
-                const inputPassword = ref('');
-                const loginError = ref(false);
-
-                const login = () => {
-                    if (inputPassword.value === 'park5211') {
-                        isAuthenticated.value = true;
-                        loginError.value = false;
-                        inputPassword.value = '';
-                    } else {
-                        loginError.value = true;
-                    }
-                };
-
-                const logout = () => {
-                    isAuthenticated.value = false;
-                };
-
-                // フロア定義（全10エリア）
                 const rawFloors = [
-                    { name: '8F', rooms: Array.from({length: 24}, (_, i) => 801 + i) },
-                    { name: '7F', rooms: Array.from({length: 24}, (_, i) => 701 + i) },
-                    { name: '6F', rooms: Array.from({length: 24}, (_, i) => 601 + i) },
-                    { name: '5F', rooms: Array.from({length: 24}, (_, i) => 501 + i) },
-                    { name: '4F', rooms: Array.from({length: 24}, (_, i) => 401 + i) },
-                    { name: '3F', rooms: Array.from({length: 24}, (_, i) => 301 + i) },
-                    { name: '2F', rooms: Array.from({length: 32}, (_, i) => 201 + i) },
-                    { name: '1F', rooms: Array.from({length: 14}, (_, i) => 119 + i) },
-                    { name: '低2F', rooms: Array.from({length: 18}, (_, i) => 233 + i) },
-                    { name: '低1F', rooms: Array.from({length: 18}, (_, i) => 133 + i) },
+                    { 
+                        name: '8F', 
+                        rows: [
+                            ['823','821','819','817','815','813','811','809','807','805','803','801'],
+                            ['824','822','820','818','816','814','812','810','808','806','804','802']
+                        ]
+                    },
+                    { 
+                        name: '7F', 
+                        rows: [
+                            ['723','721','719','717','715','713','711','709','707','705','703','701'],
+                            ['724','722','720','718','716','714','712','710','708','706','704','702']
+                        ]
+                    },
+                    { 
+                        name: '6F', 
+                        rows: [
+                            ['623','621','619','617','615','613','611','609','607','605','603','601'],
+                            ['624','622','620','618','616','614','612','610','608','606','604','602']
+                        ]
+                    },
+                    { 
+                        name: '5F', 
+                        rows: [
+                            ['523','521','519','517','515','513','511','509','507','505','503','501'],
+                            ['524','522','520','518','516','514','512','510','508','506','504','502']
+                        ]
+                    },
+                    { 
+                        name: '4F', 
+                        rows: [
+                            ['423','421','419','417','415','413','411','409','407','405','403','401'],
+                            ['424','422','420','418','416','414','412','410','408','406','404','402']
+                        ]
+                    },
+                    { 
+                        name: '3F', 
+                        rows: [
+                            ['323','321','319','317','315','313','311','309','307','305','303','301'],
+                            ['324','322','320','318','316','314','312','310','308','306','304','302']
+                        ]
+                    },
+                    { 
+                        name: '2F', 
+                        rows: [
+                            ['231','229','227','225','223','221','219','217','215','213','211','209'],
+                            ['232','230','228','226','224','222','220','218','216','214','212','210'],
+                            ['207','205','203','201', null, null, null, null, null, null, null, null],
+                            ['208','206','204','202', null, null, null, null, null, null, null, null]
+                        ]
+                    },
+                    { 
+                        name: '1F', 
+                        rows: [
+                            ['131','129','127','125','123','121','119', null, null, null, null, null],
+                            ['132','130','128','126','124','122','120', null, null, null, null, null]
+                        ]
+                    },
+                    { 
+                        name: '低2F', 
+                        rows: [
+                            ['236','237','238','239','240','241','242','243','244','245','246','247'],
+                            ['235','234','233', null, null, null, null, null, null, '250','249','248']
+                        ]
+                    },
+                    { 
+                        name: '低1F', 
+                        rows: [
+                            ['136','137','138','139','140','141', null, null, '144','145','146','147'],
+                            ['135','134','133', null, null, null, null, null, null, '150','149','148']
+                        ]
+                    }
                 ];
 
-                const displayFloors = computed(() => {
-                    return rawFloors.map(flr => {
-                        let rows = [];
-                        let flexWeight = 1;
+                const displayFloors = computed(() => rawFloors);
+                const rooms = ref({});
 
-                        if (flr.name === '2F') {
-                            rows = [flr.rooms.slice(0, 16), flr.rooms.slice(16, 32)];
-                            flexWeight = 2;
-                        } else {
-                            rows = [flr.rooms];
-                            flexWeight = 1;
-                        }
-
-                        return {
-                            name: flr.name,
-                            totalRooms: flr.rooms.length,
-                            rows,
-                            flexWeight
-                        };
-                    });
-                });
-
-                // 初期ルームデータの構築
-                const initialRooms = {};
-                rawFloors.forEach(flr => {
-                    flr.rooms.forEach(rNo => {
-                        initialRooms[rNo] = {
-                            isContracted: true,
-                            status: 'out', // 'in', 'out', 'long_absent'
-                            parcel: false,
-                            cleaning: false,
-                            mail: false
-                        };
-                    });
-                });
-
-                const rooms = ref(initialRooms);
-
-                // ローカルストレージ同期
-                const saveToLocal = () => {
-                    try {
-                        localStorage.setItem('pkhs_rooms_data_v2', JSON.stringify(rooms.value));
-                    } catch(e) {}
-                };
-
-                const initLocalStorage = () => {
-                    try {
-                        const saved = localStorage.getItem('pkhs_rooms_data_v2');
-                        if (saved) {
-                            rooms.value = JSON.parse(saved);
-                        }
-                    } catch(e) {}
-                };
-
+                const toastMessage = ref('');
+                const showUnifiedHandoverModal = ref(false);
+                const showSingleRoomModalFlag = ref(false);
+                const targetRoomNo = ref('');
                 const showBatchModal = ref(false);
                 const showResetModal = ref(false);
                 const resetMenuTab = ref('items');
-                const showSingleRoomModal = ref(false);
-                const targetRoomNo = ref(null);
-                const toastMessage = ref('');
+
+                const batchModalTitle = ref('一括処理');
+                const batchModalIcon = ref('fa-solid fa-layer-group');
+                const batchTargetInput = ref('');
+                const batchItems = ref(false);
+                const batchContractState = ref('keep');
+                const batchItemsState = ref({ parcel: false, cleaning: false, mail: false });
+
+                const activeItemRooms = ref([]);
+
+                let pressTimer = null;
 
                 const showToast = (msg) => {
                     toastMessage.value = msg;
                     setTimeout(() => {
-                        if (toastMessage.value === msg) toastMessage.value = '';
-                    }, 2500);
+                        if (toastMessage.value === msg) {
+                            toastMessage.value = '';
+                        }
+                    }, 2200);
                 };
 
-                // タップ時：在館／外出の切り替え
-                const handleRoomClick = (rNo) => {
-                    const room = rooms.value[rNo];
-                    if (!room || !room.isContracted) return;
-                    if (room.status === 'long_absent') {
-                        showToast(`${rNo}号室は長期不在中です`);
+                const initLocalStorage = () => {
+                    const saved = localStorage.getItem('apartment_rooms_state_v41');
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            const initial = { ...parsed };
+                            rawFloors.forEach(f => {
+                                f.rows.forEach(row => {
+                                    row.forEach(rNo => {
+                                        if (rNo && !initial[rNo]) {
+                                            initial[rNo] = {
+                                                isContracted: true,
+                                                status: 'out',
+                                                isAirpay: false,
+                                                parcel: false,
+                                                cleaning: false,
+                                                mail: false
+                                            };
+                                        }
+                                    });
+                                });
+                            });
+                            rooms.value = initial;
+                            return;
+                        } catch (e) {
+                            console.error("Load error", e);
+                        }
+                    }
+                    const initial = {};
+                    rawFloors.forEach(f => {
+                        f.rows.forEach(row => {
+                            row.forEach(rNo => {
+                                if (rNo) {
+                                    initial[rNo] = {
+                                        isContracted: true,
+                                        status: 'out',
+                                        isAirpay: false,
+                                        parcel: false,
+                                        cleaning: false,
+                                        mail: false
+                                    };
+                                }
+                            });
+                        });
+                    });
+                    rooms.value = initial;
+                    saveData();
+                };
+
+                const saveData = () => {
+                    try {
+                        localStorage.setItem('apartment_rooms_state_v41', JSON.stringify(rooms.value));
+                    } catch (e) {
+                        console.error("Save error", e);
+                    }
+                };
+
+                const handleRoomClick = (roomNo) => {
+                    if (!rooms.value[roomNo]) return;
+                    const r = rooms.value[roomNo];
+                    if (r.status === 'long_absent') {
+                        showToast(`${roomNo}号室は長期不在中のため切替できません`);
                         return;
                     }
-                    room.status = room.status === 'in' ? 'out' : 'in';
-                    saveToLocal();
-                    showToast(`${rNo}号室を【${room.status === 'in' ? '在館' : '外出'}】に切り替えました`);
+                    if (!r.isContracted) {
+                        openSingleRoomModal(roomNo);
+                        return;
+                    }
+                    r.status = r.status === 'in' ? 'out' : 'in';
+                    saveData();
+                    showToast(`${roomNo}号室を${r.status === 'in' ? '「在館」' : '「外出」'}に変更`);
                 };
 
-                // 長押しでの個別モーダル表示制御
-                let pressTimer = null;
-                const startPress = (rNo, e) => {
+                const startPress = (roomNo, e) => {
+                    clearTimeout(pressTimer);
                     pressTimer = setTimeout(() => {
-                        openSingleRoomModal(rNo);
-                    }, 600);
-                };
-                const cancelPress = (rNo, e) => {
-                    if (pressTimer) {
-                        clearTimeout(pressTimer);
-                        pressTimer = null;
-                    }
+                        openSingleRoomModal(roomNo);
+                    }, 500);
                 };
 
-                const openSingleRoomModal = (rNo) => {
-                    targetRoomNo.value = rNo;
-                    showSingleRoomModal.value = true;
+                const cancelPress = (roomNo, e) => {
+                    clearTimeout(pressTimer);
                 };
 
-                const setRoomContract = (rNo, isContracted) => {
-                    if (rooms.value[rNo]) {
-                        rooms.value[rNo].isContracted = isContracted;
-                        if (!isContracted) {
-                            rooms.value[rNo].parcel = false;
-                            rooms.value[rNo].cleaning = false;
-                            rooms.value[rNo].mail = false;
-                        }
-                        saveToLocal();
-                        showToast(`${rNo}号室を${isContracted ? '契約中に変更しました' : '空室に設定しました'}`);
-                    }
+                const openSingleRoomModal = (roomNo) => {
+                    clearTimeout(pressTimer);
+                    targetRoomNo.value = roomNo;
+                    showSingleRoomModalFlag.value = true;
                 };
 
-                const setRoomStatus = (rNo, status) => {
-                    if (rooms.value[rNo] && rooms.value[rNo].isContracted) {
-                        rooms.value[rNo].status = status;
-                        saveToLocal();
-                        showToast(`${rNo}号室のステータスを変更しました`);
-                    }
-                };
+                const getRoomCardClass = (roomNo) => {
+                    const r = rooms.value[roomNo];
+                    if (!r) return 'bg-slate-100 border-slate-300 text-slate-400';
 
-                const toggleRoomItem = (rNo, itemKey) => {
-                    if (rooms.value[rNo] && rooms.value[rNo].isContracted) {
-                        rooms.value[rNo][itemKey] = !rooms.value[rNo][itemKey];
-                        saveToLocal();
-                    }
-                };
+                    let baseStyle = '';
+                    let borderStyle = r.isAirpay ? 'border-2 border-rose-600 shadow-2xs' : 'border-slate-300';
 
-                const quickHandoverSingleItem = (rNo, itemKey) => {
-                    if (rooms.value[rNo]) {
-                        rooms.value[rNo][itemKey] = false;
-                        saveToLocal();
-                        const names = { parcel: '荷物', cleaning: 'クリーニング', mail: '郵便物' };
-                        showToast(`${rNo}号室の${names[itemKey]}を受け渡し完了にしました`);
-                    }
-                };
-
-                const handoverAllForRoom = (rNo) => {
-                    if (rooms.value[rNo]) {
-                        rooms.value[rNo].parcel = false;
-                        rooms.value[rNo].cleaning = false;
-                        rooms.value[rNo].mail = false;
-                        saveToLocal();
-                        showSingleRoomModal.value = false;
-                        showToast(`${rNo}号室のすべての預かり物を一括クリアしました`);
-                    }
-                };
-
-                const getRoomCardClass = (rNo) => {
-                    const room = rooms.value[rNo];
-                    if (!room || !room.isContracted) {
-                        return 'bg-slate-200/70 border-slate-300 opacity-60';
-                    }
-                    if (room.status === 'in') {
-                        return 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/20';
-                    } else if (room.status === 'long_absent') {
-                        return 'bg-purple-50 text-purple-900 border-purple-400 ring-1 ring-purple-300';
+                    if (r.status === 'long_absent') {
+                        baseStyle = 'bg-purple-100 text-purple-900';
+                        if (!r.isAirpay) borderStyle = 'border-purple-300';
+                    } else if (!r.isContracted) {
+                        baseStyle = 'bg-slate-100 text-slate-400 opacity-75';
+                    } else if (r.status === 'in') {
+                        baseStyle = 'bg-emerald-600 text-white shadow-2xs';
+                        if (!r.isAirpay) borderStyle = 'border-emerald-500';
                     } else {
-                        return 'bg-white text-slate-800 border-amber-400 ring-1 ring-amber-300 shadow-amber-500/10';
+                        baseStyle = 'bg-white text-amber-900 shadow-2xs';
+                        if (!r.isAirpay) borderStyle = 'border border-amber-500';
                     }
+
+                    return `${baseStyle} ${borderStyle}`;
                 };
 
-                const getRoomNumberClass = (rNo) => {
-                    const room = rooms.value[rNo];
-                    if (!room || !room.isContracted) return 'text-slate-500';
-                    if (room.status === 'in') return 'text-white';
-                    if (room.status === 'long_absent') return 'text-purple-900';
-                    return 'text-slate-800';
+                const getRoomNumberClass = (roomNo) => {
+                    const r = rooms.value[roomNo];
+                    if (!r || !r.isContracted || r.status === 'long_absent') return '';
+                    if (r.status === 'in') {
+                        return 'text-white';
+                    }
+                    return 'text-slate-900';
                 };
 
                 const countStatus = computed(() => {
                     let inCount = 0;
                     let outCount = 0;
                     let longAbsentCount = 0;
+                    let airpayCount = 0;
                     let vacantCount = 0;
-                    let parcelCount = 0;
-                    let cleaningCount = 0;
-                    let mailCount = 0;
                     let hasItemsCount = 0;
 
                     Object.keys(rooms.value).forEach(rNo => {
-                        const room = rooms.value[rNo];
-                        if (!room.isContracted) {
+                        const r = rooms.value[rNo];
+                        if (r.status === 'long_absent') {
+                            longAbsentCount++;
+                        } else if (!r.isContracted) {
                             vacantCount++;
                             return;
+                        } else {
+                            if (r.status === 'in') inCount++;
+                            else if (r.status === 'out') outCount++;
                         }
-                        if (room.status === 'in') inCount++;
-                        else if (room.status === 'out') outCount++;
-                        else if (room.status === 'long_absent') longAbsentCount++;
 
-                        if (room.parcel) parcelCount++;
-                        if (room.cleaning) cleaningCount++;
-                        if (room.mail) mailCount++;
-                        if (room.parcel || room.cleaning || room.mail) hasItemsCount++;
+                        if (r.isAirpay) airpayCount++;
+                        if (r.parcel || r.cleaning || r.mail) hasItemsCount++;
                     });
 
                     return {
                         in: inCount,
                         out: outCount,
                         longAbsent: longAbsentCount,
+                        airpay: airpayCount,
                         vacant: vacantCount,
-                        parcel: parcelCount,
-                        cleaning: cleaningCount,
-                        mail: mailCount,
                         hasItems: hasItemsCount
                     };
                 });
 
-                // 統合引渡モーダル用
-                const showHandoverModal = ref(false);
-                const handoverTargetType = ref('parcel');
-                const handoverRoomInput = ref('');
-
-                const openUnifiedHandoverModal = () => {
-                    handoverTargetType.value = 'parcel';
-                    handoverRoomInput.value = '';
-                    showHandoverModal.value = true;
-                };
-
-                const activeItemRooms = computed(() => {
-                    const list = [];
-                    Object.keys(rooms.value).forEach(rNo => {
-                        if (rooms.value[rNo][handoverTargetType.value]) {
-                            list.push(Number(rNo));
-                        }
-                    });
-                    return list.sort((a,b) => a - b);
-                });
-
-                const appendHandoverRoom = (rNo) => {
-                    const current = handoverRoomInput.value.trim();
-                    if (current) {
-                        const parts = current.split(/[,,\s]+/).map(Number);
-                        if (!parts.includes(rNo)) {
-                            handoverRoomInput.value = current + ', ' + rNo;
-                        }
-                    } else {
-                        handoverRoomInput.value = String(rNo);
+                const setRoomContract = (isContracted) => {
+                    if (!rooms.value[targetRoomNo.value]) return;
+                    const r = rooms.value[targetRoomNo.value];
+                    r.isContracted = isContracted;
+                    if (!isContracted) {
+                        r.status = 'out';
+                        r.isAirpay = false;
+                        r.parcel = false;
+                        r.cleaning = false;
+                        r.mail = false;
+                    } else if (r.status === 'long_absent') {
+                        r.status = 'out'; 
                     }
+                    saveData();
+                    showToast(`${targetRoomNo.value}号室を${isContracted ? '「契約中」' : '「空室」'}に変更`);
                 };
 
-                const executeHandoverClear = () => {
-                    let targetList = [];
-                    const val = handoverRoomInput.value.trim();
-                    if (!val) {
-                        showToast('号室を入力または選択してください');
+                const setRoomStatus = (status) => {
+                    if (!rooms.value[targetRoomNo.value]) return;
+                    const r = rooms.value[targetRoomNo.value];
+                    if (status === 'long_absent') {
+                        r.status = 'long_absent';
+                        r.isContracted = false; 
+                        saveData();
+                        showToast(`${targetRoomNo.value}号室を「長期不在」に設定`);
                         return;
                     }
-
-                    const parts = val.split(/[,,\s]+/);
-                    parts.forEach(p => {
-                        if (p.includes('-')) {
-                            const [start, end] = p.split('-').map(Number);
-                            if (!isNaN(start) && !isNaN(end)) {
-                                for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
-                                    targetList.push(i);
-                                }
-                            }
-                        } else {
-                            const num = Number(p);
-                            if (!isNaN(num)) targetList.push(num);
-                        }
-                    });
-
-                    let clearedCount = 0;
-                    targetList.forEach(rNo => {
-                        if (rooms.value[rNo] && rooms.value[rNo][handoverTargetType.value]) {
-                            rooms.value[rNo][handoverTargetType.value] = false;
-                            clearedCount++;
-                        }
-                    });
-
-                    saveToLocal();
-                    showHandoverModal.value = false;
-                    const itemNames = { parcel: '荷物', cleaning: 'クリーニング', mail: '郵便物' };
-                    showToast(`${clearedCount}室の${itemNames[handoverTargetType.value]}の引渡しを完了しました`);
+                    r.status = status;
+                    r.isContracted = true;
+                    saveData();
+                    showToast(`${targetRoomNo.value}号室ステータス更新`);
                 };
 
-                // 一括登録モーダル
-                const batchModalTitle = ref('一括登録');
-                const batchModalIcon = ref('fa-layer-group text-indigo-600');
-                const batchTargetInput = ref('');
-                const batchContractState = ref('noChange');
-                const batchItems = ref({ parcel: false, cleaning: false, mail: false });
-                const showVacantOptionInBatch = ref(false);
-
-                let batchVacantTimer = null;
-                const startBatchVacantPress = () => {
-                    batchVacantTimer = setTimeout(() => {
-                        showVacantOptionInBatch.value = !showVacantOptionInBatch.value;
-                        showToast(showVacantOptionInBatch.value ? '空室一括変更オプションを解禁しました' : '空室一括変更を非表示にしました');
-                    }, 500);
-                };
-                const cancelBatchVacantPress = () => {
-                    if (batchVacantTimer) {
-                        clearTimeout(batchVacantTimer);
-                        batchVacantTimer = null;
-                    }
+                const toggleAirpay = () => {
+                    if (!rooms.value[targetRoomNo.value]) return;
+                    rooms.value[targetRoomNo.value].isAirpay = !rooms.value[targetRoomNo.value].isAirpay;
+                    saveData();
+                    showToast(`AirPay情報更新`);
                 };
 
-                const openBatchModal = () => {
-                    batchTargetInput.value = '';
-                    batchContractState.value = 'noChange';
-                    batchItems.value = { parcel: false, cleaning: false, mail: false };
-                    batchModalTitle.value = '一括登録・状態変更';
-                    batchModalIcon.value = 'fa-layer-group text-indigo-600';
-                    showBatchModal.value = true;
+                const toggleRoomItem = (itemKey) => {
+                    if (!rooms.value[targetRoomNo.value]) return;
+                    rooms.value[targetRoomNo.value][itemKey] = !rooms.value[targetRoomNo.value][itemKey];
+                    saveData();
+                    showToast(`お預かり状況更新`);
+                };
+
+                const handoverAllForRoom = (roomNo) => {
+                    if (!rooms.value[roomNo]) return;
+                    rooms.value[roomNo].parcel = false;
+                    rooms.value[roomNo].cleaning = false;
+                    rooms.value[roomNo].mail = false;
+                    saveData();
+                    updateActiveItemRoomsList();
+                    showToast(`${roomNo}号室の預かり物を引渡完了`);
                 };
 
                 const openQuickBatch = (type) => {
+                    batchItems.value = true;
                     batchTargetInput.value = '';
-                    batchContractState.value = 'noChange';
-                    batchItems.value = { 
-                        parcel: type === 'parcel', 
-                        cleaning: type === 'cleaning', 
-                        mail: type === 'mail' 
-                    };
-                    
                     if (type === 'parcel') {
-                        batchModalTitle.value = '荷物（宅配）の一括登録';
-                        batchModalIcon.value = 'fa-box text-blue-600';
+                        batchModalTitle.value = '荷物 一括登録';
+                        batchModalIcon.value = 'fa-solid fa-box';
                     } else if (type === 'cleaning') {
-                        batchModalTitle.value = 'クリーニングの一括登録';
-                        batchModalIcon.value = 'fa-shirt text-purple-600';
+                        batchModalTitle.value = 'クリーニング 一括登録';
+                        batchModalIcon.value = 'fa-solid fa-shirt';
                     } else if (type === 'mail') {
-                        batchModalTitle.value = '郵便物の一括登録';
-                        batchModalIcon.value = 'fa-envelope text-rose-600';
+                        batchModalTitle.value = '郵便 一括登録';
+                        batchModalIcon.value = 'fa-solid fa-envelope';
                     }
-                    
+                    showBatchModal.value = true;
+                };
+
+                const openBatchModal = () => {
+                    batchItems.value = false;
+                    batchModalTitle.value = '一括ステータス・預かり登録';
+                    batchModalIcon.value = 'fa-solid fa-layer-group';
+                    batchTargetInput.value = '';
+                    batchContractState.value = 'keep';
+                    batchItemsState.value = { parcel: false, cleaning: false, mail: false };
                     showBatchModal.value = true;
                 };
 
                 const executeBatchUpdate = () => {
-                    let targetList = [];
-                    const val = batchTargetInput.value.trim();
-
-                    if (val === '全室' || val === '') {
-                        targetList = Object.keys(rooms.value).map(Number);
-                    } else {
-                        const parts = val.split(/[,,\s]+/);
-                        parts.forEach(p => {
-                            if (p.includes('-')) {
-                                const [start, end] = p.split('-').map(Number);
-                                if (!isNaN(start) && !isNaN(end)) {
-                                    for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
-                                        targetList.push(i);
-                                    }
-                                }
-                            } else {
-                                const num = Number(p);
-                                if (!isNaN(num)) targetList.push(num);
-                            }
-                        });
+                    const input = batchTargetInput.value.trim();
+                    if (!input) {
+                        showToast('対象号室を入力してください');
+                        return;
                     }
 
-                    let updatedCount = 0;
-                    targetList.forEach(rNo => {
-                        if (rooms.value[rNo]) {
-                            updatedCount++;
-                            if (batchContractState.value === 'vacant') {
-                                rooms.value[rNo].isContracted = false;
-                                rooms.value[rNo].parcel = false;
-                                rooms.value[rNo].cleaning = false;
-                                rooms.value[rNo].mail = false;
-                            } else if (batchContractState.value !== 'noChange') {
-                                rooms.value[rNo].isContracted = true;
-                                rooms.value[rNo].status = batchContractState.value;
+                    const targetRooms = new Set();
+                    input.split(',').forEach(part => {
+                        part = part.trim();
+                        if (part.includes('-')) {
+                            const [start, end] = part.split('-').map(s => parseInt(s.trim(), 10));
+                            if (!isNaN(start) && !isNaN(end)) {
+                                for (let i = start; i <= end; i++) {
+                                    const rStr = i.toString();
+                                    if (rooms.value[rStr]) targetRooms.add(rStr);
+                                }
                             }
-
-                            if (batchItems.value.parcel) rooms.value[rNo].parcel = true;
-                            if (batchItems.value.cleaning) rooms.value[rNo].cleaning = true;
-                            if (batchItems.value.mail) rooms.value[rNo].mail = true;
+                        } else {
+                            if (rooms.value[part]) targetRooms.add(part);
                         }
                     });
 
-                    saveToLocal();
+                    if (targetRooms.size === 0) {
+                        showToast('該当する有効な号室が見つかりません');
+                        return;
+                    }
+
+                    targetRooms.forEach(rNo => {
+                        const r = rooms.value[rNo];
+                        if (batchItems.value) {
+                            if (batchModalTitle.value.includes('荷物')) r.parcel = true;
+                            else if (batchModalTitle.value.includes('クリーニング')) r.cleaning = true;
+                            else if (batchModalTitle.value.includes('郵便')) r.mail = true;
+                        } else {
+                            if (batchContractState.value === 'contract') {
+                                r.isContracted = true;
+                                if (r.status === 'long_absent') r.status = 'out';
+                            } else if (batchContractState.value === 'vacant') {
+                                r.isContracted = false;
+                                r.status = 'out';
+                            } else if (batchContractState.value === 'long_absent') {
+                                r.status = 'long_absent';
+                                r.isContracted = false;
+                            }
+                            if (batchItemsState.value.parcel) r.parcel = true;
+                            if (batchItemsState.value.cleaning) r.cleaning = true;
+                            if (batchItemsState.value.mail) r.mail = true;
+                        }
+                    });
+
+                    saveData();
                     showBatchModal.value = false;
-                    showToast(`${updatedCount}室に一括登録を反映しました`);
+                    showToast(`${targetRooms.size}件を一括更新しました`);
                 };
 
                 const openResetModal = () => {
@@ -1174,119 +1048,122 @@
                     showResetModal.value = true;
                 };
 
-                const resetStatus = (targetStatus) => {
-                    let count = 0;
-                    Object.keys(rooms.value).forEach(r => {
-                        const room = rooms.value[r];
-                        if (room && room.isContracted && room.status !== 'long_absent') {
-                            room.status = targetStatus;
-                            count++;
-                        }
-                    });
-                    saveToLocal();
-                    showResetModal.value = false;
-                    showToast(`対象契約室 (${count}室) を【${targetStatus === 'in' ? '在館' : '外出'}】に設定しました`);
-                };
-
                 const resetAllItems = () => {
-                    let count = 0;
-                    Object.keys(rooms.value).forEach(r => {
-                        if (rooms.value[r] && (rooms.value[r].parcel || rooms.value[r].cleaning || rooms.value[r].mail)) {
-                            rooms.value[r].parcel = false;
-                            rooms.value[r].cleaning = false;
-                            rooms.value[r].mail = false;
-                            count++;
-                        }
+                    Object.keys(rooms.value).forEach(rNo => {
+                        rooms.value[rNo].parcel = false;
+                        rooms.value[rNo].cleaning = false;
+                        rooms.value[rNo].mail = false;
                     });
-                    saveToLocal();
+                    saveData();
                     showResetModal.value = false;
-                    showToast(`${count}室の預かり物を一括引き渡しクリアしました`);
+                    showToast('すべての預かり物をクリアしました');
                 };
 
-                const resetItemCategory = (itemKey) => {
-                    let count = 0;
-                    Object.keys(rooms.value).forEach(r => {
-                        if (rooms.value[r] && rooms.value[r][itemKey]) {
-                            rooms.value[r][itemKey] = false;
-                            count++;
+                const resetItemCategory = (cat) => {
+                    Object.keys(rooms.value).forEach(rNo => {
+                        rooms.value[rNo][cat] = false;
+                    });
+                    saveData();
+                    showResetModal.value = false;
+                    showToast('預かり物カテゴリをクリアしました');
+                };
+
+                const resetStatus = (status) => {
+                    Object.keys(rooms.value).forEach(rNo => {
+                        if (rooms.value[rNo].isContracted && rooms.value[rNo].status !== 'long_absent') {
+                            rooms.value[rNo].status = status;
                         }
                     });
-                    saveToLocal();
+                    saveData();
                     showResetModal.value = false;
-                    showToast(`${count}室の対象預かり物をクリアしました`);
+                    showToast(`全契約室を「${status === 'in' ? '在館' : '外出'}」に変更`);
                 };
 
                 const resetAllStatusAndItems = () => {
-                    Object.keys(rooms.value).forEach(r => {
-                        const room = rooms.value[r];
-                        if (room && room.isContracted) {
-                            if (room.status !== 'long_absent') {
-                                room.status = 'out';
-                            }
-                            room.parcel = false;
-                            room.cleaning = false;
-                            room.mail = false;
+                    Object.keys(rooms.value).forEach(rNo => {
+                        if (rooms.value[rNo].isContracted && rooms.value[rNo].status !== 'long_absent') {
+                            rooms.value[rNo].status = 'out';
+                            rooms.value[rNo].parcel = false;
+                            rooms.value[rNo].cleaning = false;
+                            rooms.value[rNo].mail = false;
                         }
                     });
-                    saveToLocal();
+                    saveData();
                     showResetModal.value = false;
-                    showToast('一括「外出」＋ 預かり物をクリアしました');
+                    showToast('一括リセットを実行しました');
                 };
 
-                onMounted(() => {
-                    initLocalStorage();
+                const updateActiveItemRoomsList = () => {
+                    const list = [];
+                    Object.keys(rooms.value).forEach(rNo => {
+                        const r = rooms.value[rNo];
+                        if ((r.isContracted || r.status === 'long_absent') && (r.parcel || r.cleaning || r.mail)) {
+                            list.push({ roomNo: rNo, selected: false });
+                        }
+                    });
+                    activeItemRooms.value = list;
+                };
+
+                const openUnifiedHandoverModal = () => {
+                    updateActiveItemRoomsList();
+                    showUnifiedHandoverModal.value = true;
+                };
+
+                const selectAllHandoverRooms = (val) => {
+                    activeItemRooms.value.forEach(item => {
+                        item.selected = val;
+                    });
+                };
+
+                const executeHandoverClear = () => {
+                    let count = 0;
+                    activeItemRooms.value.forEach(item => {
+                        if (item.selected) {
+                            rooms.value[item.roomNo].parcel = false;
+                            rooms.value[item.roomNo].cleaning = false;
+                            rooms.value[item.roomNo].mail = false;
+                            count++;
+                        }
+                    });
+                    saveData();
+                    showUnifiedHandoverModal.value = false;
+                    showToast(`${count}件のお部屋を引き渡し完了しました`);
+                };
+
+                const currentDateString = ref('');
+                const currentTimeString = ref('');
+                const currentWeather = ref('晴れ');
+                const weatherIcon = ref('fa-solid fa-sun text-amber-500');
+
+                const updateDateTime = () => {
+                    const now = new Date();
+                    const month = now.getMonth() + 1;
+                    const date = now.getDate();
+                    const days = ['日', '月', '火', '水', '木', '金', '土'];
+                    const dayName = days[now.getDay()];
+                    currentDateString.value = `${month}月${date}日(${dayName})`;
+
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    currentTimeString.value = `${hours}:${minutes}`;
+                };
+
+                onMounted(() => { 
+                    initLocalStorage(); 
+                    updateDateTime();
+                    setInterval(updateDateTime, 10000);
                 });
 
                 return {
-                    isAuthenticated,
-                    inputPassword,
-                    loginError,
-                    login,
-                    logout,
-                    rawFloors,
-                    displayFloors,
-                    rooms,
-                    handleRoomClick,
-                    getRoomCardClass,
-                    getRoomNumberClass,
-                    countStatus,
-                    showBatchModal,
-                    openBatchModal,
-                    openQuickBatch,
-                    batchModalTitle,
-                    batchModalIcon,
-                    batchTargetInput,
-                    batchContractState,
-                    batchItems,
-                    showVacantOptionInBatch,
-                    startBatchVacantPress,
-                    cancelBatchVacantPress,
-                    executeBatchUpdate,
-                    showResetModal,
-                    resetMenuTab,
-                    openResetModal,
-                    resetStatus,
-                    resetAllItems,
-                    resetItemCategory,
-                    resetAllStatusAndItems,
-                    showSingleRoomModal,
-                    targetRoomNo,
-                    openSingleRoomModal,
-                    setRoomContract,
-                    setRoomStatus,
-                    toggleRoomItem,
-                    quickHandoverSingleItem,
-                    handoverAllForRoom,
-                    startPress,
-                    cancelPress,
-                    toastMessage,
-                    showHandoverModal,
-                    handoverTargetType,
-                    handoverRoomInput,
-                    activeItemRooms,
-                    openUnifiedHandoverModal,
-                    appendHandoverRoom,
-                    executeHandoverClear
+                    rawFloors, displayFloors, rooms, handleRoomClick, getRoomCardClass, getRoomNumberClass,
+                    countStatus, showBatchModal, openBatchModal, openQuickBatch, batchModalTitle, batchModalIcon,
+                    batchTargetInput, batchItems, batchContractState, batchItemsState, executeBatchUpdate,
+                    showResetModal, resetMenuTab, openResetModal, resetStatus, resetAllItems, resetItemCategory,
+                    resetAllStatusAndItems, showSingleRoomModalFlag, targetRoomNo, openSingleRoomModal,
+                    setRoomContract, setRoomStatus, toggleAirpay, toggleRoomItem,
+                    handoverAllForRoom, startPress, cancelPress, toastMessage, showUnifiedHandoverModal,
+                    activeItemRooms, openUnifiedHandoverModal, selectAllHandoverRooms, executeHandoverClear,
+                    currentDateString, currentTimeString, currentWeather, weatherIcon
                 };
             }
         }).mount('#app');
