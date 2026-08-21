@@ -76,8 +76,11 @@
         <!-- ヘッダー部分 -->
         <header class="bg-white text-slate-800 shadow-xs shrink-0 border border-slate-200/80 rounded-xl px-2 py-0.5 flex flex-col gap-0.5">
             <div class="flex items-center justify-between text-[11px] gap-1 flex-wrap sm:flex-nowrap">
-                <!-- 左側：カウンタ -->
+                <!-- 左側：カウンタと担当者名 -->
                 <div class="flex items-center space-x-1 shrink-0">
+                    <span class="px-1.5 py-0.5 rounded-md bg-slate-900 text-white font-bold shadow-2xs text-[10px]" title="担当者">
+                        <i class="fa-solid fa-user-tie text-emerald-400 mr-0.5"></i>奈良部直志
+                    </span>
                     <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold shadow-2xs">
                         在: <strong class="text-emerald-900 font-black text-xs ml-0.5">{{ countStatus.in }}</strong>
                     </span>
@@ -236,17 +239,17 @@
                                         <div class="w-full flex items-center justify-center space-x-1 pb-0.5">
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].parcel"
-                                                class="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
+                                                class="bg-blue-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
                                                 title="荷物あり"
                                             >荷</span>
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].cleaning"
-                                                class="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
+                                                class="bg-purple-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
                                                 title="洗濯あり"
                                             >洗</span>
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].mail"
-                                                class="bg-rose-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
+                                                class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
                                                 title="郵便あり"
                                             >郵</span>
                                         </div>
@@ -564,13 +567,13 @@
             </div>
         </div>
 
-        <!-- リセットメニューモーダル -->
+        <!-- リセットメニューモーダル (指定のメニュー構成: 預かり物クリア・在館/外在切替・一括消去・CSV/連携) -->
         <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
             <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
                 <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-gears text-slate-700 text-base"></i>
-                        <h3 class="font-black text-sm">システム管理・データ一括メニュー</h3>
+                        <h3 class="font-black text-sm">システム管理メニュー (担当: 奈良部直志)</h3>
                     </div>
                     <button @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
                         <i class="fa-solid fa-xmark"></i>
@@ -594,21 +597,22 @@
                             在館/外在切替
                         </button>
                         <button 
-                            @click="resetMenuTab = 'csv'" 
-                            :class="resetMenuTab === 'csv' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'"
-                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-emerald-300 shadow-2xs whitespace-nowrap"
-                        >
-                            CSV/連携
-                        </button>
-                        <button 
                             @click="resetMenuTab = 'danger'" 
                             :class="resetMenuTab === 'danger' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
                             class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-rose-200 shadow-2xs whitespace-nowrap"
                         >
                             一括消去
                         </button>
+                        <button 
+                            @click="resetMenuTab = 'csv'" 
+                            :class="resetMenuTab === 'csv' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-emerald-300 shadow-2xs whitespace-nowrap"
+                        >
+                            CSV/連携
+                        </button>
                     </div>
 
+                    <!-- 1. 預かり物クリア -->
                     <div v-if="resetMenuTab === 'items'" class="space-y-3">
                         <p class="text-xs text-slate-600">
                             全契約室の【荷物・クリーニング・郵便】の預かり状況をクリア（引き渡し完了）します。
@@ -648,12 +652,13 @@
                         </div>
                     </div>
 
+                    <!-- 2. 在館/外在切替 -->
                     <div v-if="resetMenuTab === 'status'" class="space-y-3">
                         <p class="text-xs text-slate-600">
-                            全契約室（長期不在を除く）の【在館/外出ステータス】を一括でリセットします。
+                            全契約室（長期不在を除く）の【在館/外出ステータス】を一括で切り替えます。
                         </p>
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                            <span class="block text-xs font-bold text-slate-700">【在館 / 外出】一括変更</span>
+                            <span class="block text-xs font-bold text-slate-700">【在館 / 外出】一括切替</span>
                             <div class="grid grid-cols-2 gap-2">
                                 <button 
                                     type="button"
@@ -675,6 +680,29 @@
                         </div>
                     </div>
 
+                    <!-- 3. 一括消去 -->
+                    <div v-if="resetMenuTab === 'danger'" class="space-y-3">
+                        <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 space-y-2.5">
+                            <div class="flex items-center space-x-1.5 text-rose-700 font-bold text-xs">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+                                <span>【一括消去】すべての状態を「外出」に変更 + 預かり物クリア</span>
+                            </div>
+                            <p class="text-[11px] text-rose-800/90 leading-relaxed">
+                                契約中の部屋を「外出」にし、すべての預かり物を一括で全消去します。<br>
+                                <strong>※「空室」「未契約」「長期不在」「AirPay」の情報は保持されます。</strong>
+                            </p>
+                            <button 
+                                type="button"
+                                @click="resetAllStatusAndItems" 
+                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5"
+                            >
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>一括消去を実行する</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. CSV/連携 -->
                     <div v-if="resetMenuTab === 'csv'" class="space-y-3 text-xs">
                         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-emerald-900 leading-relaxed text-[11px]">
                             <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>GAS Webアプリ連携:</p>
@@ -713,7 +741,8 @@
                                 :disabled="isSyncing"
                                 class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 text-[11px] shadow-xs"
                             >
-                                <i class="fa-solid fa-cloud-arrow-up"><span>スプレッドシートへ保存</span></i>
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>スプレッドシートへ保存</span>
                             </button>
                         </div>
 
@@ -734,27 +763,6 @@
                                     <span>CSV出力</span>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-
-                    <div v-if="resetMenuTab === 'danger'" class="space-y-3">
-                        <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 space-y-2.5">
-                            <div class="flex items-center space-x-1.5 text-rose-700 font-bold text-xs">
-                                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
-                                <span>【一括リセット】すべての状態を「外出」に変更</span>
-                            </div>
-                            <p class="text-[11px] text-rose-800/90 leading-relaxed">
-                                契約中の部屋を「外出」にし、すべての預かり物を一括で全消去します。<br>
-                                <strong>※「空室」「未契約」「長期不在」「AirPay」の情報は保持されます。</strong>
-                            </p>
-                            <button 
-                                type="button"
-                                @click="resetAllStatusAndItems" 
-                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5"
-                            >
-                                <i class="fa-solid fa-rotate-left"></i>
-                                <span>一括「外出」+ 預かり物全消去を実行</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -867,7 +875,6 @@
                 const isLocked = ref(true);
                 const inputPassword = ref('');
                 const passwordError = ref(false);
-                const storedPassword = ref('park5211');
 
                 const batchModalTitle = ref('一括処理');
                 const batchModalIcon = ref('fa-solid fa-layer-group');
@@ -1053,12 +1060,10 @@
                     }
                 };
 
-                // タップ時：空室・未契約の場合は何もしない（長押しのみメニュー）、契約中でかつ長期不在中でない場合のみ in/out をトグル
                 const handleRoomClick = (roomNo) => {
                     if (!rooms.value[roomNo]) return;
                     const r = rooms.value[roomNo];
                     if (r.contractStatus !== 'contracted') {
-                        // 空室・未契約の場合はワンタップでは切替せず、長押しでメニューを開く案内か何もしない
                         showToast(`${roomNo}号室（${r.contractStatus === 'vacant' ? '空室' : '未契約'}）: 長押しで管理メニューが開きます`);
                         return;
                     }
@@ -1393,7 +1398,7 @@
                     });
                     saveData();
                     showResetModal.value = false;
-                    showToast(`全室のステータスを「${status === 'in' ? '在館' : '外出'}」に変更しました`);
+                    showToast(`全室のステータスを「${status === 'in' ? '在館' : '外出'}」に切替しました`);
                 };
 
                 const resetAllStatusAndItems = () => {
@@ -1410,7 +1415,7 @@
                     });
                     saveData();
                     showResetModal.value = false;
-                    showToast('一括「外出」+ 預かり物消去を実行しました');
+                    showToast('一括消去（外出切替 + 預かり物クリア）を実行しました');
                 };
 
                 const exportCurrentStateCsv = () => {
