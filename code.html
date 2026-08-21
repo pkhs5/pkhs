@@ -54,7 +54,7 @@
                         <input 
                             type="password" 
                             v-model="inputPassword" 
-                            placeholder="パスワード" 
+                            placeholder="パスワードを入力" 
                             class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             autofocus
                         >
@@ -201,9 +201,12 @@
                                         class="room-card h-[52px] sm:h-[54px] rounded-md px-0.5 py-0.5 flex flex-col justify-between items-center cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
                                     >
                                         <!-- 上段：号室表示 -->
-                                        <div class="w-full flex items-center justify-center pt-0.5">
+                                        <div class="w-full flex items-center justify-between pt-0.5 px-0.5">
                                             <span :class="getRoomNumberClass(roomNo)" class="text-[11px] sm:text-[12px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
                                                 {{ roomNo }}
+                                            </span>
+                                            <span v-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent' && rooms[roomNo].absentPeriod" class="text-[7.5px] bg-purple-200 text-purple-900 font-bold px-1 rounded truncate max-w-[34px]" :title="rooms[roomNo].absentPeriod">
+                                                {{ rooms[roomNo].absentPeriod }}
                                             </span>
                                         </div>
 
@@ -218,7 +221,7 @@
                                             <span 
                                                 v-else-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent'" 
                                                 class="text-[9px] text-purple-700 font-bold leading-none animate-pulse"
-                                            >長期</span>
+                                            >長期不在</span>
                                             <span 
                                                 v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'vacant'" 
                                                 class="text-[9px] text-blue-700 font-bold leading-none"
@@ -229,21 +232,21 @@
                                             >未契約</span>
                                         </div>
 
-                                        <!-- 下段：預かり物アイコン -->
-                                        <div class="w-full flex items-center justify-center space-x-0.5 pb-0.5">
+                                        <!-- 下段：大きく表示されたお預かり物アイコン -->
+                                        <div class="w-full flex items-center justify-center space-x-1 pb-0.5">
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].parcel"
-                                                class="bg-blue-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                class="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
                                                 title="荷物あり"
                                             >荷</span>
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].cleaning"
-                                                class="bg-purple-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                class="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
                                                 title="洗濯あり"
                                             >洗</span>
                                             <span 
                                                 v-if="rooms[roomNo] && rooms[roomNo].mail"
-                                                class="bg-rose-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                class="bg-rose-600 text-white px-1.5 py-0.5 rounded text-[9.5px] font-black leading-none shadow-2xs"
                                                 title="郵便あり"
                                             >郵</span>
                                         </div>
@@ -349,8 +352,8 @@
 
         <!-- 個別ルーム設定モーダル -->
         <div v-if="showSingleRoomModalFlag" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col">
-                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200 shrink-0">
                     <div class="flex items-center space-x-2">
                         <span class="bg-blue-600 text-white font-black px-2.5 py-0.5 rounded text-xs">{{ targetRoomNo }}号室</span>
                         <h3 class="font-black text-sm">ルーム個別管理</h3>
@@ -360,7 +363,7 @@
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3" v-if="rooms[targetRoomNo]">
+                <div class="p-4 space-y-3 overflow-y-auto flex-1" v-if="rooms[targetRoomNo]">
                     <div class="space-y-1">
                         <span class="text-[11px] font-bold text-slate-600 block">契約ステータス変更</span>
                         <div class="grid grid-cols-3 gap-1.5">
@@ -411,13 +414,28 @@
                                 <span>外出</span>
                             </button>
                             <button 
-                                @click="setRoomStatus('long_absent')"
+                                @click="openLongAbsentPrompt"
                                 :class="rooms[targetRoomNo].status === 'long_absent' ? 'bg-purple-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                 class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
                                 <i class="fa-solid fa-plane mb-0.5"></i>
                                 <span>長期不在</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- 長期不在期間設定のインライン入力 -->
+                    <div v-if="isSettingLongAbsent" class="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-2 animate-fade-in">
+                        <span class="text-xs font-bold text-purple-900 block">長期不在の期間（任意・例: 8/20~8/25、未入力可）</span>
+                        <input 
+                            type="text" 
+                            v-model="tempAbsentPeriod" 
+                            placeholder="期間を入力（例: 8/20-25）" 
+                            class="w-full bg-white border border-purple-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                        <div class="flex justify-end space-x-2">
+                            <button @click="isSettingLongAbsent = false" class="bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300">キャンセル</button>
+                            <button @click="confirmLongAbsent" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-black px-4 py-1.5 rounded-lg">設定する</button>
                         </div>
                     </div>
 
@@ -464,7 +482,7 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end">
+                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end shrink-0">
                     <button @click="showSingleRoomModalFlag = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
                         閉じる
                     </button>
@@ -860,6 +878,10 @@
 
                 const activeItemRooms = ref([]);
 
+                // 長期不在期間設定用
+                const isSettingLongAbsent = ref(false);
+                const tempAbsentPeriod = ref('');
+
                 // 日時と天気のリアクティブ状態
                 const currentDateString = ref('');
                 const currentTimeString = ref('');
@@ -902,12 +924,7 @@
                 };
 
                 const initLocalStorage = () => {
-                    const savedPass = localStorage.getItem('apartment_lock_pass_v44');
-                    if (savedPass) {
-                        storedPassword.value = savedPass;
-                    } else {
-                        localStorage.setItem('apartment_lock_pass_v44', 'park5211');
-                    }
+                    localStorage.setItem('apartment_lock_pass_v44', 'park5211');
 
                     const savedGasUrl = localStorage.getItem('apartment_gas_url_v44');
                     if (savedGasUrl) {
@@ -916,7 +933,7 @@
                         gasWebAppUrl.value = "https://script.google.com/macros/s/AKfycbwbZ0L-cFK69WoYswCEe9l6EajdrBWyfkL0C_Wp4qORi1Ae-csKqrhSxMHE8bw-UOWh/exec";
                     }
 
-                    const saved = localStorage.getItem('apartment_rooms_state_v44');
+                    const saved = localStorage.getItem('apartment_rooms_state_v45');
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
@@ -928,15 +945,12 @@
                                             initial[rNo] = {
                                                 contractStatus: 'contracted',
                                                 status: 'out',
+                                                absentPeriod: '',
                                                 isAirpay: false,
                                                 parcel: false,
                                                 cleaning: false,
                                                 mail: false
                                             };
-                                        } else if (rNo && initial[rNo]) {
-                                            if (initial[rNo].isContracted !== undefined && !initial[rNo].contractStatus) {
-                                                initial[rNo].contractStatus = initial[rNo].isContracted ? 'contracted' : 'uncontracted';
-                                            }
                                         }
                                     });
                                 });
@@ -955,6 +969,7 @@
                                     initial[rNo] = {
                                         contractStatus: 'contracted',
                                         status: 'out',
+                                        absentPeriod: '',
                                         isAirpay: false,
                                         parcel: false,
                                         cleaning: false,
@@ -970,7 +985,7 @@
 
                 const saveData = () => {
                     try {
-                        localStorage.setItem('apartment_rooms_state_v44', JSON.stringify(rooms.value));
+                        localStorage.setItem('apartment_rooms_state_v45', JSON.stringify(rooms.value));
                     } catch (e) {
                         console.error("Save error", e);
                     }
@@ -1038,15 +1053,17 @@
                     }
                 };
 
+                // タップ時：空室・未契約の場合は何もしない（長押しのみメニュー）、契約中でかつ長期不在中でない場合のみ in/out をトグル
                 const handleRoomClick = (roomNo) => {
                     if (!rooms.value[roomNo]) return;
                     const r = rooms.value[roomNo];
-                    if (r.status === 'long_absent') {
-                        showToast(`${roomNo}号室は長期不在中のため切替できません`);
+                    if (r.contractStatus !== 'contracted') {
+                        // 空室・未契約の場合はワンタップでは切替せず、長押しでメニューを開く案内か何もしない
+                        showToast(`${roomNo}号室（${r.contractStatus === 'vacant' ? '空室' : '未契約'}）: 長押しで管理メニューが開きます`);
                         return;
                     }
-                    if (r.contractStatus !== 'contracted') {
-                        openSingleRoomModal(roomNo);
+                    if (r.status === 'long_absent') {
+                        showToast(`${roomNo}号室は長期不在中のためワンタップ切替できません`);
                         return;
                     }
                     r.status = r.status === 'in' ? 'out' : 'in';
@@ -1068,6 +1085,8 @@
                 const openSingleRoomModal = (roomNo) => {
                     clearTimeout(pressTimer);
                     targetRoomNo.value = roomNo;
+                    isSettingLongAbsent.value = false;
+                    tempAbsentPeriod.value = rooms.value[roomNo]?.absentPeriod || '';
                     showSingleRoomModalFlag.value = true;
                 };
 
@@ -1148,8 +1167,10 @@
                     r.contractStatus = contractStatus;
                     if (contractStatus !== 'contracted') {
                         r.status = 'out';
+                        r.absentPeriod = '';
                     } else if (r.status === 'long_absent') {
-                        r.status = 'out'; 
+                        r.status = 'out';
+                        r.absentPeriod = '';
                     }
                     saveData();
                     const label = contractStatus === 'contracted' ? '「契約中」' : contractStatus === 'vacant' ? '「空室」' : '「未契約」';
@@ -1160,17 +1181,34 @@
                     if (!rooms.value[targetRoomNo.value]) return;
                     const r = rooms.value[targetRoomNo.value];
                     if (status === 'long_absent') {
-                        r.status = 'long_absent';
-                        saveData();
-                        showToast(`${targetRoomNo.value}号室を「長期不在」に設定`);
+                        isSettingLongAbsent.value = true;
                         return;
                     }
+                    isSettingLongAbsent.value = false;
+                    r.absentPeriod = '';
                     r.status = status;
                     if (r.contractStatus !== 'contracted') {
                         r.contractStatus = 'contracted';
                     }
                     saveData();
                     showToast(`${targetRoomNo.value}号室ステータス更新`);
+                };
+
+                const openLongAbsentPrompt = () => {
+                    isSettingLongAbsent.value = true;
+                };
+
+                const confirmLongAbsent = () => {
+                    if (!rooms.value[targetRoomNo.value]) return;
+                    const r = rooms.value[targetRoomNo.value];
+                    r.status = 'long_absent';
+                    r.absentPeriod = tempAbsentPeriod.value.trim();
+                    if (r.contractStatus !== 'contracted') {
+                        r.contractStatus = 'contracted';
+                    }
+                    saveData();
+                    isSettingLongAbsent.value = false;
+                    showToast(`${targetRoomNo.value}号室を「長期不在」に設定しました`);
                 };
 
                 const toggleAirpay = () => {
@@ -1299,13 +1337,15 @@
                         } else {
                             if (batchContractState.value === 'contracted') {
                                 r.contractStatus = 'contracted';
-                                if (r.status === 'long_absent') r.status = 'out';
+                                if (r.status === 'long_absent') { r.status = 'out'; r.absentPeriod = ''; }
                             } else if (batchContractState.value === 'vacant') {
                                 r.contractStatus = 'vacant';
                                 r.status = 'out';
+                                r.absentPeriod = '';
                             } else if (batchContractState.value === 'uncontracted') {
                                 r.contractStatus = 'uncontracted';
                                 r.status = 'out';
+                                r.absentPeriod = '';
                             } else if (batchContractState.value === 'long_absent') {
                                 r.status = 'long_absent';
                             }
@@ -1375,7 +1415,7 @@
 
                 const exportCurrentStateCsv = () => {
                     let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-                    csvContent += "号室,契約状況,在室ステータス,AirPay,荷物,洗濯,郵便\n";
+                    csvContent += "号室,契約状況,在室ステータス,不在期間,AirPay,荷物,洗濯,郵便\n";
                     Object.keys(rooms.value).sort().forEach(rNo => {
                         const r = rooms.value[rNo];
                         let cStatusText = "契約中";
@@ -1386,7 +1426,7 @@
                         if (r.status === 'in') statusText = "在館";
                         else if (r.status === 'long_absent') statusText = "長期不在";
 
-                        csvContent += `${rNo},${cStatusText},${statusText},${r.isAirpay ? '有' : '無'},${r.parcel ? '有' : '無'},${r.cleaning ? '有' : '無'},${r.mail ? '有' : '無'}\n`;
+                        csvContent += `${rNo},${cStatusText},${statusText},"${r.absentPeriod || ''}",${r.isAirpay ? '有' : '無'},${r.parcel ? '有' : '無'},${r.cleaning ? '有' : '無'},${r.mail ? '有' : '無'}\n`;
                     });
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");
@@ -1422,9 +1462,11 @@
                                 if (cVal === '空室') {
                                     rooms.value[rNo].contractStatus = 'vacant';
                                     rooms.value[rNo].status = 'out';
+                                    rooms.value[rNo].absentPeriod = '';
                                 } else if (cVal === '未契約') {
                                     rooms.value[rNo].contractStatus = 'uncontracted';
                                     rooms.value[rNo].status = 'out';
+                                    rooms.value[rNo].absentPeriod = '';
                                 } else if (cVal === '契約中' || cVal === '1' || cVal === 'true' || cVal === 'contracted') {
                                     rooms.value[rNo].contractStatus = 'contracted';
                                 }
@@ -1432,22 +1474,32 @@
                                 const sVal = cols[2];
                                 if (sVal === '在館' || sVal === 'in') {
                                     rooms.value[rNo].status = 'in';
+                                    rooms.value[rNo].absentPeriod = '';
                                     if (rooms.value[rNo].contractStatus !== 'contracted') {
                                         rooms.value[rNo].contractStatus = 'contracted';
                                     }
                                 } else if (sVal === '長期不在') {
                                     rooms.value[rNo].status = 'long_absent';
+                                    if (cols.length >= 8) {
+                                        rooms.value[rNo].absentPeriod = cols[3];
+                                    }
                                 } else if (sVal === '外出' || sVal === 'out') {
                                     if (rooms.value[rNo].status !== 'long_absent') {
                                         rooms.value[rNo].status = 'out';
+                                        rooms.value[rNo].absentPeriod = '';
                                     }
                                 }
 
                                 const parseBool = (val) => val === '有' || val === '1' || val === 'true' || val === 'TRUE';
-                                rooms.value[rNo].isAirpay = parseBool(cols[3]);
-                                rooms.value[rNo].parcel = parseBool(cols[4]);
-                                rooms.value[rNo].cleaning = parseBool(cols[5]);
-                                rooms.value[rNo].mail = parseBool(cols[6]);
+                                const airpayIdx = cols.length >= 8 ? 4 : 3;
+                                const parcelIdx = cols.length >= 8 ? 5 : 4;
+                                const cleanIdx = cols.length >= 8 ? 6 : 5;
+                                const mailIdx = cols.length >= 8 ? 7 : 6;
+
+                                rooms.value[rNo].isAirpay = parseBool(cols[airpayIdx]);
+                                rooms.value[rNo].parcel = parseBool(cols[parcelIdx]);
+                                rooms.value[rNo].cleaning = parseBool(cols[cleanIdx]);
+                                rooms.value[rNo].mail = parseBool(cols[mailIdx]);
                                 count++;
                             }
                         }
@@ -1486,6 +1538,8 @@
                     batchContractState,
                     batchItemsState,
                     activeItemRooms,
+                    isSettingLongAbsent,
+                    tempAbsentPeriod,
                     currentDateString,
                     currentTimeString,
                     currentWeather,
@@ -1501,6 +1555,8 @@
                     countStatus,
                     setRoomContract,
                     setRoomStatus,
+                    openLongAbsentPrompt,
+                    confirmLongAbsent,
                     toggleAirpay,
                     toggleRoomItem,
                     updateActiveItemRoomsList,
