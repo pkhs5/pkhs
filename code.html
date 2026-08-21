@@ -76,11 +76,8 @@
         <!-- ヘッダー部分 -->
         <header class="bg-white text-slate-800 shadow-xs shrink-0 border border-slate-200/80 rounded-xl px-2 py-0.5 flex flex-col gap-0.5">
             <div class="flex items-center justify-between text-[11px] gap-1 flex-wrap sm:flex-nowrap">
-                <!-- 左側：カウンタと担当者名 -->
+                <!-- 左側：カウンタ -->
                 <div class="flex items-center space-x-1 shrink-0">
-                    <span class="px-1.5 py-0.5 rounded-md bg-slate-900 text-white font-bold shadow-2xs text-[10px]" title="担当者">
-                        <i class="fa-solid fa-user-tie text-emerald-400 mr-0.5"></i>奈良部直志
-                    </span>
                     <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold shadow-2xs">
                         在: <strong class="text-emerald-900 font-black text-xs ml-0.5">{{ countStatus.in }}</strong>
                     </span>
@@ -203,9 +200,9 @@
                                         :class="getRoomCardClass(roomNo)"
                                         class="room-card h-[52px] sm:h-[54px] rounded-md px-0.5 py-0.5 flex flex-col justify-between items-center cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
                                     >
-                                        <!-- 上段：号室表示 -->
+                                        <!-- 上段：号室表示を大きく調整 -->
                                         <div class="w-full flex items-center justify-between pt-0.5 px-0.5">
-                                            <span :class="getRoomNumberClass(roomNo)" class="text-[11px] sm:text-[12px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
+                                            <span :class="getRoomNumberClass(roomNo)" class="text-[13px] sm:text-[14px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
                                                 {{ roomNo }}
                                             </span>
                                             <span v-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent' && rooms[roomNo].absentPeriod" class="text-[7.5px] bg-purple-200 text-purple-900 font-bold px-1 rounded truncate max-w-[34px]" :title="rooms[roomNo].absentPeriod">
@@ -567,13 +564,13 @@
             </div>
         </div>
 
-        <!-- リセットメニューモーダル (指定のメニュー構成: 預かり物クリア・在館/外在切替・一括消去・CSV/連携) -->
-        <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+                <!-- リセットメニューモーダル (指定のメニュー構成: 預かり物クリア・在館/外在切替・一括消去・CSV/連携) -->
+                <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
             <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
                 <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-gears text-slate-700 text-base"></i>
-                        <h3 class="font-black text-sm">システム管理メニュー (担当: 奈良部直志)</h3>
+                        <h3 class="font-black text-sm">システム管理メニュー</h3>
                     </div>
                     <button @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
                         <i class="fa-solid fa-xmark"></i>
