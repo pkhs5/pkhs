@@ -36,69 +36,105 @@
     </style>
 </head>
 <body class="h-full w-full bg-slate-100 text-slate-800 antialiased flex flex-col overflow-hidden">
-    <!-- 変更: paddingとgapを極力コンパクトにして1画面に完全に収める -->
-    <div id="app" class="h-screen w-screen flex flex-col bg-slate-100 p-1 gap-1 overflow-hidden box-border">
+    <div id="app" class="h-screen w-screen flex flex-col bg-slate-100 p-0.5 gap-0.5 overflow-hidden box-border">
 
-        <!-- ヘッダー部分：高さを極限までコンパクトに -->
-        <header class="bg-white text-slate-800 shadow-sm shrink-0 border border-slate-200 rounded-xl px-2.5 py-1 flex flex-col gap-0.5">
-            <!-- サマリーバー：カウンタ、日付・時間・天気、リセット・引渡等のボタン群を1行に集約 -->
-            <div class="flex items-center justify-between text-[11px] gap-2 flex-wrap sm:flex-nowrap">
-                <!-- 左側：在館・外出などのカウンタ -->
+        <!-- パスワードロック画面 -->
+        <div v-if="isLocked" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col p-6 space-y-4">
+                <div class="text-center space-y-1">
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl mb-2 shadow-inner">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h2 class="font-black text-base text-slate-900">パスワード認証</h2>
+                    <p class="text-xs text-slate-500">システムを利用するにはパスワードを入力してください。</p>
+                </div>
+
+                <form @submit.prevent="verifyPassword" class="space-y-3">
+                    <div>
+                        <input 
+                            type="password" 
+                            v-model="inputPassword" 
+                            placeholder="パスワード" 
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            autofocus
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black py-3 rounded-xl shadow-md transition text-xs flex items-center justify-center space-x-1.5"
+                    >
+                        <i class="fa-solid fa-key"></i>
+                        <span>ロックを解除する</span>
+                    </button>
+                </form>
+                <div v-if="passwordError" class="text-rose-600 text-xs text-center font-bold animate-pulse">
+                    パスワードが違います
+                </div>
+            </div>
+        </div>
+
+        <!-- ヘッダー部分 -->
+        <header class="bg-white text-slate-800 shadow-xs shrink-0 border border-slate-200/80 rounded-xl px-2 py-0.5 flex flex-col gap-0.5">
+            <div class="flex items-center justify-between text-[11px] gap-1 flex-wrap sm:flex-nowrap">
+                <!-- 左側：カウンタ -->
                 <div class="flex items-center space-x-1 shrink-0">
-                    <span class="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
-                        在館: <strong class="text-emerald-900 font-black text-xs ml-0.5">{{ countStatus.in }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold shadow-2xs">
+                        在: <strong class="text-emerald-900 font-black text-xs ml-0.5">{{ countStatus.in }}</strong>
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-white text-amber-800 border border-amber-300 font-bold">
-                        外出: <strong class="text-amber-900 font-black text-xs ml-0.5">{{ countStatus.out }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-white text-amber-800 border border-amber-300 font-bold shadow-2xs">
+                        外: <strong class="text-amber-900 font-black text-xs ml-0.5">{{ countStatus.out }}</strong>
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-bold">
-                        長期: <strong class="text-purple-900 font-black text-xs ml-0.5">{{ countStatus.longAbsent }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 font-bold shadow-2xs">
+                        長: <strong class="text-purple-900 font-black text-xs ml-0.5">{{ countStatus.longAbsent }}</strong>
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-800 border border-rose-200 font-bold">
-                        AirPay: <strong class="text-rose-900 font-black text-xs ml-0.5">{{ countStatus.airpay }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200 font-bold shadow-2xs">
+                        A: <strong class="text-rose-900 font-black text-xs ml-0.5">{{ countStatus.airpay }}</strong>
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-700 border border-slate-300 font-bold">
-                        空室: <strong class="text-slate-900 font-black text-xs ml-0.5">{{ countStatus.vacant }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-bold shadow-2xs">
+                        空: <strong class="text-blue-900 font-black text-xs ml-0.5">{{ countStatus.vacant }}</strong>
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold">
-                        <i class="fa-solid fa-boxes-packing text-amber-600 mr-0.5"></i>預かり: <strong class="text-indigo-950 font-black text-xs ml-0.5">{{ countStatus.hasItems }}</strong>
+                    <span class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 font-bold shadow-2xs">
+                        未: <strong class="text-slate-900 font-black text-xs ml-0.5">{{ countStatus.uncontracted }}</strong>
+                    </span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold shadow-2xs">
+                        <i class="fa-solid fa-boxes-packing text-amber-600 mr-0.5"></i>預: <strong class="text-indigo-950 font-black text-xs ml-0.5">{{ countStatus.hasItems }}</strong>
                     </span>
                 </div>
 
-                <!-- 中央：日付、時間、天気を配置 -->
-                <div class="flex items-center justify-center px-1">
-                    <div class="flex items-center space-x-2 text-[11px] px-2.5 py-0.5 rounded-full border bg-slate-50 text-slate-700 border-slate-300 font-bold whitespace-nowrap shadow-2xs">
+                <!-- 中央：日時・天気 -->
+                <div class="flex items-center justify-center px-0.5">
+                    <div class="flex items-center space-x-1.5 text-[10px] px-2 py-0.5 rounded-full border bg-slate-50 text-slate-700 border-slate-300 font-bold whitespace-nowrap shadow-2xs">
                         <div class="flex items-center space-x-1">
-                            <i class="fa-solid fa-calendar-days text-[11px] text-blue-600"></i>
+                            <i class="fa-solid fa-calendar-days text-[10px] text-blue-600"></i>
                             <span>{{ currentDateString }}</span>
                         </div>
                         <span class="text-slate-300">|</span>
                         <div class="flex items-center space-x-1">
-                            <i class="fa-solid fa-clock text-[11px] text-indigo-600"></i>
+                            <i class="fa-solid fa-clock text-[10px] text-indigo-600"></i>
                             <span>{{ currentTimeString }}</span>
                         </div>
                         <span class="text-slate-300">|</span>
                         <div class="flex items-center space-x-1">
-                            <i :class="weatherIcon" class="text-[11px]"></i>
+                            <i :class="weatherIcon" class="text-[10px]"></i>
                             <span>{{ currentWeather }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 右側：リセット・引渡・荷物・洗・郵・一括ボタン群 -->
+                <!-- 右側：ボタン群 -->
                 <div class="flex items-center gap-1 shrink-0">
                     <button 
                         @click="openResetModal" 
-                        class="h-6 bg-slate-100 hover:bg-slate-200 active:scale-95 text-rose-600 text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 border border-slate-300 transition whitespace-nowrap"
-                        title="リセットメニュー"
+                        class="h-6 bg-slate-100 hover:bg-slate-200 active:scale-95 text-rose-600 text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 border border-slate-300 transition whitespace-nowrap"
+                        title="リセット・管理メニュー"
                     >
                         <i class="fa-solid fa-rotate-left"></i>
-                        <span>リセット</span>
+                        <span>メニュー</span>
                     </button>
 
                     <button 
                         @click="openUnifiedHandoverModal" 
-                        class="h-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[11px] font-black px-2 rounded-md shadow-xs flex items-center justify-center space-x-1 transition border border-emerald-500 whitespace-nowrap"
+                        class="h-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[10px] font-black px-2 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition border border-emerald-500 whitespace-nowrap"
                         title="お預かり物の引渡・クリア処理"
                     >
                         <i class="fa-solid fa-hand-holding-heart"></i>
@@ -107,28 +143,28 @@
 
                     <button 
                         @click="openQuickBatch('parcel')" 
-                        class="h-6 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
                         <i class="fa-solid fa-box"></i>
                         <span>荷物</span>
                     </button>
                     <button 
                         @click="openQuickBatch('cleaning')" 
-                        class="h-6 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
                         <i class="fa-solid fa-shirt"></i>
                         <span>洗</span>
                     </button>
                     <button 
                         @click="openQuickBatch('mail')" 
-                        class="h-6 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
                         <i class="fa-solid fa-envelope"></i>
                         <span>郵</span>
                     </button>
                     <button 
                         @click="openBatchModal" 
-                        class="h-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-[11px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
                     >
                         <i class="fa-solid fa-layer-group"></i>
                         <span>一括</span>
@@ -137,16 +173,16 @@
             </div>
         </header>
 
-        <!-- メインフロア表示：高さを完全に最適化して1Fまで見切れないように調整 -->
-        <main class="flex-1 flex flex-col gap-0.5 overflow-y-auto min-h-0 justify-between">
+        <!-- メインフロア表示 -->
+        <main class="flex-1 flex flex-col gap-0.5 overflow-hidden justify-between pr-0.5">
             <template v-for="floor in displayFloors" :key="floor.name">
-                <div class="flex items-center bg-white rounded-lg px-1.5 py-0.5 shadow-2xs border border-slate-200 shrink-0">
+                <div class="flex items-center bg-white rounded-lg px-1.5 py-0.5 shadow-2xs border border-slate-200/80 shrink-0">
                     <!-- フロア名ラベル -->
-                    <div class="w-9 sm:w-11 shrink-0 flex flex-col items-center justify-center font-bold text-slate-700 border-r border-slate-200 pr-1 mr-1">
+                    <div class="w-9 sm:w-10 shrink-0 flex flex-col items-center justify-center font-bold text-slate-700 border-r border-slate-200 pr-1 mr-1">
                         <span class="text-[11px] font-black whitespace-nowrap text-slate-900">{{ floor.name }}</span>
                     </div>
 
-                    <!-- 各階のグリッドエリア：カード高さを調整して収める -->
+                    <!-- 各階のグリッドエリア -->
                     <div class="flex-1 flex flex-col gap-0.5">
                         <template v-for="(rowRooms, rIndex) in floor.rows" :key="rIndex">
                             <div class="grid grid-cols-12 gap-0.5 w-full items-center">
@@ -162,57 +198,57 @@
                                         @mouseleave="cancelPress(roomNo, $event)"
                                         @contextmenu.prevent="openSingleRoomModal(roomNo)"
                                         :class="getRoomCardClass(roomNo)"
-                                        class="room-card h-[29px] sm:h-[31px] rounded-md px-1 py-0.5 flex items-center justify-between cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
+                                        class="room-card h-[52px] sm:h-[54px] rounded-md px-0.5 py-0.5 flex flex-col justify-between items-center cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
                                     >
-                                        <!-- 号室表示と横に並ぶアイコン群 -->
-                                        <div class="flex items-center space-x-1 shrink-0">
-                                            <span :class="getRoomNumberClass(roomNo)" class="text-[11px] sm:text-xs tracking-tighter font-black whitespace-nowrap select-none leading-none">
+                                        <!-- 上段：号室表示 -->
+                                        <div class="w-full flex items-center justify-center pt-0.5">
+                                            <span :class="getRoomNumberClass(roomNo)" class="text-[11px] sm:text-[12px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
                                                 {{ roomNo }}
                                             </span>
-                                            <!-- 号室のすぐ横に並ぶ荷物等アイコン（大きく視認性アップ） -->
-                                            <div v-if="rooms[roomNo] && (rooms[roomNo].parcel || rooms[roomNo].cleaning || rooms[roomNo].mail)" class="flex items-center space-x-0.5">
-                                                <span 
-                                                    v-if="rooms[roomNo].parcel"
-                                                    class="bg-blue-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
-                                                    title="荷物あり"
-                                                >荷</span>
-                                                <span 
-                                                    v-if="rooms[roomNo].cleaning"
-                                                    class="bg-purple-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
-                                                    title="洗濯あり"
-                                                >洗</span>
-                                                <span 
-                                                    v-if="rooms[roomNo].mail"
-                                                    class="bg-rose-600 text-white px-1 py-0.2 rounded text-[9px] font-black leading-none shadow-2xs"
-                                                    title="郵便あり"
-                                                >郵</span>
-                                            </div>
                                         </div>
 
-                                        <!-- 右側のステータスバッジ（AirPayや空室など） -->
-                                        <div class="flex items-center space-x-0.5 shrink-0">
+                                        <!-- 中段：AirPayバッジや状態マーク -->
+                                        <div class="w-full flex items-center justify-center">
                                             <span 
-                                                v-if="!rooms[roomNo] || (!rooms[roomNo].isContracted && rooms[roomNo].status !== 'long_absent')" 
-                                                class="text-[10px] text-slate-400 font-bold leading-none"
-                                            >
-                                                空
-                                            </span>
-                                            <i 
-                                                v-else-if="rooms[roomNo].status === 'long_absent'" 
-                                                class="fa-solid fa-plane text-[10px] text-purple-700 animate-pulse"
-                                                title="長期不在"
-                                            ></i>
-                                            <template v-else>
-                                                <span 
-                                                    v-if="rooms[roomNo].isAirpay" 
-                                                    class="px-1 py-0.2 rounded text-[9px] font-black leading-none" 
-                                                    :class="rooms[roomNo].status === 'in' ? 'bg-white text-rose-600' : 'bg-rose-600 text-white'" 
-                                                    title="AirPay"
-                                                >A</span>
-                                            </template>
+                                                v-if="rooms[roomNo] && rooms[roomNo].isAirpay" 
+                                                class="px-1.5 py-0.5 rounded text-[8px] font-black leading-none" 
+                                                :class="rooms[roomNo].status === 'in' ? 'bg-white text-rose-600' : 'bg-rose-600 text-white'" 
+                                                title="AirPay"
+                                            >AirPay</span>
+                                            <span 
+                                                v-else-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent'" 
+                                                class="text-[9px] text-purple-700 font-bold leading-none animate-pulse"
+                                            >長期</span>
+                                            <span 
+                                                v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'vacant'" 
+                                                class="text-[9px] text-blue-700 font-bold leading-none"
+                                            >空室</span>
+                                            <span 
+                                                v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'uncontracted'" 
+                                                class="text-[9px] text-slate-500 font-bold leading-none"
+                                            >未契約</span>
+                                        </div>
+
+                                        <!-- 下段：預かり物アイコン -->
+                                        <div class="w-full flex items-center justify-center space-x-0.5 pb-0.5">
+                                            <span 
+                                                v-if="rooms[roomNo] && rooms[roomNo].parcel"
+                                                class="bg-blue-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                title="荷物あり"
+                                            >荷</span>
+                                            <span 
+                                                v-if="rooms[roomNo] && rooms[roomNo].cleaning"
+                                                class="bg-purple-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                title="洗濯あり"
+                                            >洗</span>
+                                            <span 
+                                                v-if="rooms[roomNo] && rooms[roomNo].mail"
+                                                class="bg-rose-600 text-white px-1 py-0.2 rounded-[2px] text-[7.5px] font-black leading-none shadow-2xs"
+                                                title="郵便あり"
+                                            >郵</span>
                                         </div>
                                     </div>
-                                    <div v-else class="w-full h-full min-h-[29px] pointer-events-none opacity-0"></div>
+                                    <div v-else class="w-full h-full min-h-[52px] pointer-events-none opacity-0"></div>
                                 </template>
                             </div>
                         </template>
@@ -326,23 +362,31 @@
 
                 <div class="p-4 space-y-3" v-if="rooms[targetRoomNo]">
                     <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-slate-600 block">ステータス変更</span>
-                        <div class="grid grid-cols-2 gap-1.5">
+                        <span class="text-[11px] font-bold text-slate-600 block">契約ステータス変更</span>
+                        <div class="grid grid-cols-3 gap-1.5">
                             <button 
-                                @click="setRoomContract(true)"
-                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                @click="setRoomContract('contracted')"
+                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                 class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
                             >
                                 <i class="fa-solid fa-user-check"></i>
                                 <span>契約中</span>
                             </button>
                             <button 
-                                @click="setRoomContract(false)"
-                                :class="!rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-slate-700 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                @click="setRoomContract('vacant')"
+                                :class="rooms[targetRoomNo].contractStatus === 'vacant' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-500 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                 class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
                             >
-                                <i class="fa-solid fa-lock"></i>
-                                <span>空室 (ロック)</span>
+                                <i class="fa-solid fa-door-open"></i>
+                                <span>空室</span>
+                            </button>
+                            <button 
+                                @click="setRoomContract('uncontracted')"
+                                :class="rooms[targetRoomNo].contractStatus === 'uncontracted' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-slate-700 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                            >
+                                <i class="fa-solid fa-ban"></i>
+                                <span>未契約</span>
                             </button>
                         </div>
                     </div>
@@ -352,7 +396,7 @@
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
                                 @click="setRoomStatus('in')"
-                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status === 'in' ? 'bg-emerald-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status === 'in' ? 'bg-emerald-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                 class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
                                 <i class="fa-solid fa-house mb-0.5"></i>
@@ -360,7 +404,7 @@
                             </button>
                             <button 
                                 @click="setRoomStatus('out')"
-                                :class="rooms[targetRoomNo].isContracted && rooms[targetRoomNo].status === 'out' ? 'bg-amber-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status === 'out' ? 'bg-amber-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                 class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
                             >
                                 <i class="fa-solid fa-person-walking-arrow-right mb-0.5"></i>
@@ -465,9 +509,10 @@
                             <span class="block text-xs font-bold text-slate-700">ステータス変更</span>
                             <select v-model="batchContractState" class="w-full bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-3 py-2.5 text-xs font-bold">
                                 <option value="keep">変更しない（現在のまま）</option>
-                                <option value="contract">契約中にする</option>
-                                <option value="vacant">空室にする（ロック）</option>
-                                <option value="long_absent">長期不在にする（ロック）</option>
+                                <option value="contracted">契約中にする</option>
+                                <option value="vacant">空室にする</option>
+                                <option value="uncontracted">未契約にする</option>
+                                <option value="long_absent">長期不在にする</option>
                             </select>
                         </div>
                         <div class="space-y-1">
@@ -506,8 +551,8 @@
             <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
                 <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                     <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-rotate-left text-rose-600 text-base"></i>
-                        <h3 class="font-black text-sm">システムデータ・状態リセット</h3>
+                        <i class="fa-solid fa-gears text-slate-700 text-base"></i>
+                        <h3 class="font-black text-sm">システム管理・データ一括メニュー</h3>
                     </div>
                     <button @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
                         <i class="fa-solid fa-xmark"></i>
@@ -515,27 +560,34 @@
                 </div>
 
                 <div class="p-4 space-y-3">
-                    <div class="flex border-b border-slate-200 pb-2 space-x-2">
+                    <div class="flex border-b border-slate-200 pb-2 space-x-1 overflow-x-auto">
                         <button 
                             @click="resetMenuTab = 'items'" 
                             :class="resetMenuTab === 'items' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-slate-300 shadow-2xs"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap"
                         >
                             預かり物クリア
                         </button>
                         <button 
                             @click="resetMenuTab = 'status'" 
                             :class="resetMenuTab === 'status' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-slate-300 shadow-2xs"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap"
                         >
-                            在館 / 外在切替
+                            在館/外在切替
+                        </button>
+                        <button 
+                            @click="resetMenuTab = 'csv'" 
+                            :class="resetMenuTab === 'csv' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-emerald-300 shadow-2xs whitespace-nowrap"
+                        >
+                            CSV/連携
                         </button>
                         <button 
                             @click="resetMenuTab = 'danger'" 
                             :class="resetMenuTab === 'danger' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
-                            class="flex-1 py-2 rounded-lg text-xs font-bold transition border border-rose-200 shadow-2xs"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-rose-200 shadow-2xs whitespace-nowrap"
                         >
-                            一括外出 + 消去
+                            一括消去
                         </button>
                     </div>
 
@@ -605,6 +657,68 @@
                         </div>
                     </div>
 
+                    <div v-if="resetMenuTab === 'csv'" class="space-y-3 text-xs">
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-emerald-900 leading-relaxed text-[11px]">
+                            <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>GAS Webアプリ連携:</p>
+                            Google Apps Script (GAS) のWebアプリURLを設定すると、ボタン一つでスプレッドシートと双方向のデータ同期（読込・保存）が可能です。
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <span class="font-bold text-slate-700 block text-[11px]">GAS Webアプリ URL</span>
+                            <div class="flex space-x-1.5">
+                                <input 
+                                    type="text" 
+                                    v-model="gasWebAppUrl" 
+                                    placeholder="https://script.google.com/macros/s/.../exec" 
+                                    class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                <button 
+                                    @click="saveGasUrl" 
+                                    class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1.5 rounded-xl transition shrink-0 text-[11px]"
+                                >
+                                    保存
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button 
+                                @click="syncFromGas" 
+                                :disabled="isSyncing"
+                                class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 text-[11px] shadow-xs"
+                            >
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                <span>スプレッドシートから読込</span>
+                            </button>
+                            <button 
+                                @click="syncToGas" 
+                                :disabled="isSyncing"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 text-[11px] shadow-xs"
+                            >
+                                <i class="fa-solid fa-cloud-arrow-up"><span>スプレッドシートへ保存</span></i>
+                            </button>
+                        </div>
+
+                        <div class="border-t border-slate-200 pt-2 space-y-1.5">
+                            <span class="font-bold text-slate-700 block text-[11px]">従来のCSV読込・出力</span>
+                            <div class="flex space-x-2">
+                                <input 
+                                    type="file" 
+                                    accept=".csv, text/csv" 
+                                    @change="handleCsvUpload" 
+                                    class="block flex-1 text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[11px] file:font-black file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer border border-slate-300 rounded-xl p-1 bg-slate-50"
+                                >
+                                <button 
+                                    @click="exportCurrentStateCsv" 
+                                    class="bg-slate-600 hover:bg-slate-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center space-x-1 text-[11px] shrink-0"
+                                >
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>CSV出力</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-if="resetMenuTab === 'danger'" class="space-y-3">
                         <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 space-y-2.5">
                             <div class="flex items-center space-x-1.5 text-rose-700 font-bold text-xs">
@@ -613,7 +727,7 @@
                             </div>
                             <p class="text-[11px] text-rose-800/90 leading-relaxed">
                                 契約中の部屋を「外出」にし、すべての預かり物を一括で全消去します。<br>
-                                <strong>※「空室」「長期不在」「AirPay」の情報は保持されます。</strong>
+                                <strong>※「空室」「未契約」「長期不在」「AirPay」の情報は保持されます。</strong>
                             </p>
                             <button 
                                 type="button"
@@ -722,11 +836,20 @@
 
                 const toastMessage = ref('');
                 const showUnifiedHandoverModal = ref(false);
+                const spreadsheetCsvUrl = ref('');
+                const gasWebAppUrl = ref('');
+                const isSyncing = ref(false);
                 const showSingleRoomModalFlag = ref(false);
                 const targetRoomNo = ref('');
                 const showBatchModal = ref(false);
                 const showResetModal = ref(false);
                 const resetMenuTab = ref('items');
+
+                // パスワードロック機能の状態
+                const isLocked = ref(true);
+                const inputPassword = ref('');
+                const passwordError = ref(false);
+                const storedPassword = ref('park5211');
 
                 const batchModalTitle = ref('一括処理');
                 const batchModalIcon = ref('fa-solid fa-layer-group');
@@ -737,7 +860,37 @@
 
                 const activeItemRooms = ref([]);
 
+                // 日時と天気のリアクティブ状態
+                const currentDateString = ref('');
+                const currentTimeString = ref('');
+                const currentWeather = ref('晴れ');
+                const weatherIcon = ref('fa-solid fa-sun text-amber-500');
+
                 let pressTimer = null;
+
+                const verifyPassword = () => {
+                    const pass = localStorage.getItem('apartment_lock_pass_v44') || 'park5211';
+                    if (inputPassword.value.trim() === pass) {
+                        isLocked.value = false;
+                        passwordError.value = false;
+                        inputPassword.value = '';
+                        showToast('ロックを解除しました');
+                    } else {
+                        passwordError.value = true;
+                    }
+                };
+
+                const updateDateTime = () => {
+                    const now = new Date();
+                    const month = now.getMonth() + 1;
+                    const date = now.getDate();
+                    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+                    currentDateString.value = `${month}/${date}(${dayOfWeek})`;
+
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    currentTimeString.value = `${hours}:${minutes}`;
+                };
 
                 const showToast = (msg) => {
                     toastMessage.value = msg;
@@ -749,7 +902,21 @@
                 };
 
                 const initLocalStorage = () => {
-                    const saved = localStorage.getItem('apartment_rooms_state_v41');
+                    const savedPass = localStorage.getItem('apartment_lock_pass_v44');
+                    if (savedPass) {
+                        storedPassword.value = savedPass;
+                    } else {
+                        localStorage.setItem('apartment_lock_pass_v44', 'park5211');
+                    }
+
+                    const savedGasUrl = localStorage.getItem('apartment_gas_url_v44');
+                    if (savedGasUrl) {
+                        gasWebAppUrl.value = savedGasUrl;
+                    } else {
+                        gasWebAppUrl.value = "https://script.google.com/macros/s/AKfycbwbZ0L-cFK69WoYswCEe9l6EajdrBWyfkL0C_Wp4qORi1Ae-csKqrhSxMHE8bw-UOWh/exec";
+                    }
+
+                    const saved = localStorage.getItem('apartment_rooms_state_v44');
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
@@ -759,13 +926,17 @@
                                     row.forEach(rNo => {
                                         if (rNo && !initial[rNo]) {
                                             initial[rNo] = {
-                                                isContracted: true,
+                                                contractStatus: 'contracted',
                                                 status: 'out',
                                                 isAirpay: false,
                                                 parcel: false,
                                                 cleaning: false,
                                                 mail: false
                                             };
+                                        } else if (rNo && initial[rNo]) {
+                                            if (initial[rNo].isContracted !== undefined && !initial[rNo].contractStatus) {
+                                                initial[rNo].contractStatus = initial[rNo].isContracted ? 'contracted' : 'uncontracted';
+                                            }
                                         }
                                     });
                                 });
@@ -782,7 +953,7 @@
                             row.forEach(rNo => {
                                 if (rNo) {
                                     initial[rNo] = {
-                                        isContracted: true,
+                                        contractStatus: 'contracted',
                                         status: 'out',
                                         isAirpay: false,
                                         parcel: false,
@@ -799,9 +970,71 @@
 
                 const saveData = () => {
                     try {
-                        localStorage.setItem('apartment_rooms_state_v41', JSON.stringify(rooms.value));
+                        localStorage.setItem('apartment_rooms_state_v44', JSON.stringify(rooms.value));
                     } catch (e) {
                         console.error("Save error", e);
+                    }
+                };
+
+                const saveGasUrl = () => {
+                    localStorage.setItem('apartment_gas_url_v44', gasWebAppUrl.value.trim());
+                    showToast('GAS URLを保存しました');
+                };
+
+                const syncFromGas = async () => {
+                    if (!gasWebAppUrl.value.trim()) {
+                        showToast('GAS WebアプリURLを入力してください');
+                        return;
+                    }
+                    isSyncing.value = true;
+                    try {
+                        const res = await fetch(gasWebAppUrl.value.trim());
+                        const json = await res.json();
+                        if (json.status === 'success' && json.data) {
+                            let count = 0;
+                            for (const rNo in json.data) {
+                                if (rooms.value[rNo]) {
+                                    rooms.value[rNo] = { ...rooms.value[rNo], ...json.data[rNo] };
+                                    count++;
+                                }
+                            }
+                            saveData();
+                            showResetModal.value = false;
+                            showToast(`スプレッドシートから ${count} 部屋のデータを同期しました`);
+                        } else {
+                            showToast('データの取得に失敗しました');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast('通信エラーが発生しました');
+                    } finally {
+                        isSyncing.value = false;
+                    }
+                };
+
+                const syncToGas = async () => {
+                    if (!gasWebAppUrl.value.trim()) {
+                        showToast('GAS WebアプリURLを入力してください');
+                        return;
+                    }
+                    isSyncing.value = true;
+                    try {
+                        const res = await fetch(gasWebAppUrl.value.trim(), {
+                            method: 'POST',
+                            body: JSON.stringify({ rooms: rooms.value })
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            showResetModal.value = false;
+                            showToast('スプレッドシートへ正常に保存しました');
+                        } else {
+                            showToast('保存に失敗しました');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast('通信エラーが発生しました');
+                    } finally {
+                        isSyncing.value = false;
                     }
                 };
 
@@ -812,7 +1045,7 @@
                         showToast(`${roomNo}号室は長期不在中のため切替できません`);
                         return;
                     }
-                    if (!r.isContracted) {
+                    if (r.contractStatus !== 'contracted') {
                         openSingleRoomModal(roomNo);
                         return;
                     }
@@ -848,7 +1081,9 @@
                     if (r.status === 'long_absent') {
                         baseStyle = 'bg-purple-100 text-purple-900';
                         if (!r.isAirpay) borderStyle = 'border-purple-300';
-                    } else if (!r.isContracted) {
+                    } else if (r.contractStatus === 'vacant') {
+                        baseStyle = 'bg-blue-50 text-blue-800 border-blue-200';
+                    } else if (r.contractStatus === 'uncontracted') {
                         baseStyle = 'bg-slate-100 text-slate-400 opacity-75';
                     } else if (r.status === 'in') {
                         baseStyle = 'bg-emerald-600 text-white shadow-2xs';
@@ -863,7 +1098,7 @@
 
                 const getRoomNumberClass = (roomNo) => {
                     const r = rooms.value[roomNo];
-                    if (!r || !r.isContracted || r.status === 'long_absent') return '';
+                    if (!r || r.contractStatus !== 'contracted' || r.status === 'long_absent') return '';
                     if (r.status === 'in') {
                         return 'text-white';
                     }
@@ -876,16 +1111,18 @@
                     let longAbsentCount = 0;
                     let airpayCount = 0;
                     let vacantCount = 0;
+                    let uncontractedCount = 0;
                     let hasItemsCount = 0;
 
                     Object.keys(rooms.value).forEach(rNo => {
                         const r = rooms.value[rNo];
                         if (r.status === 'long_absent') {
                             longAbsentCount++;
-                        } else if (!r.isContracted) {
+                        } else if (r.contractStatus === 'vacant') {
                             vacantCount++;
-                            return;
-                        } else {
+                        } else if (r.contractStatus === 'uncontracted') {
+                            uncontractedCount++;
+                        } else if (r.contractStatus === 'contracted') {
                             if (r.status === 'in') inCount++;
                             else if (r.status === 'out') outCount++;
                         }
@@ -900,25 +1137,23 @@
                         longAbsent: longAbsentCount,
                         airpay: airpayCount,
                         vacant: vacantCount,
+                        uncontracted: uncontractedCount,
                         hasItems: hasItemsCount
                     };
                 });
 
-                const setRoomContract = (isContracted) => {
+                const setRoomContract = (contractStatus) => {
                     if (!rooms.value[targetRoomNo.value]) return;
                     const r = rooms.value[targetRoomNo.value];
-                    r.isContracted = isContracted;
-                    if (!isContracted) {
+                    r.contractStatus = contractStatus;
+                    if (contractStatus !== 'contracted') {
                         r.status = 'out';
-                        r.isAirpay = false;
-                        r.parcel = false;
-                        r.cleaning = false;
-                        r.mail = false;
                     } else if (r.status === 'long_absent') {
                         r.status = 'out'; 
                     }
                     saveData();
-                    showToast(`${targetRoomNo.value}号室を${isContracted ? '「契約中」' : '「空室」'}に変更`);
+                    const label = contractStatus === 'contracted' ? '「契約中」' : contractStatus === 'vacant' ? '「空室」' : '「未契約」';
+                    showToast(`${targetRoomNo.value}号室を${label}に変更`);
                 };
 
                 const setRoomStatus = (status) => {
@@ -926,13 +1161,14 @@
                     const r = rooms.value[targetRoomNo.value];
                     if (status === 'long_absent') {
                         r.status = 'long_absent';
-                        r.isContracted = false; 
                         saveData();
                         showToast(`${targetRoomNo.value}号室を「長期不在」に設定`);
                         return;
                     }
                     r.status = status;
-                    r.isContracted = true;
+                    if (r.contractStatus !== 'contracted') {
+                        r.contractStatus = 'contracted';
+                    }
                     saveData();
                     showToast(`${targetRoomNo.value}号室ステータス更新`);
                 };
@@ -951,6 +1187,28 @@
                     showToast(`お預かり状況更新`);
                 };
 
+                const updateActiveItemRoomsList = () => {
+                    const list = [];
+                    Object.keys(rooms.value).forEach(rNo => {
+                        const r = rooms.value[rNo];
+                        if (r.parcel || r.cleaning || r.mail) {
+                            list.push({ roomNo: rNo, selected: true });
+                        }
+                    });
+                    activeItemRooms.value = list;
+                };
+
+                const openUnifiedHandoverModal = () => {
+                    updateActiveItemRoomsList();
+                    showUnifiedHandoverModal.value = true;
+                };
+
+                const selectAllHandoverRooms = (val) => {
+                    activeItemRooms.value.forEach(item => {
+                        item.selected = val;
+                    });
+                };
+
                 const handoverAllForRoom = (roomNo) => {
                     if (!rooms.value[roomNo]) return;
                     rooms.value[roomNo].parcel = false;
@@ -959,6 +1217,23 @@
                     saveData();
                     updateActiveItemRoomsList();
                     showToast(`${roomNo}号室の預かり物を引渡完了`);
+                };
+
+                const executeHandoverClear = () => {
+                    let count = 0;
+                    activeItemRooms.value.forEach(item => {
+                        if (item.selected) {
+                            if (rooms.value[item.roomNo]) {
+                                rooms.value[item.roomNo].parcel = false;
+                                rooms.value[item.roomNo].cleaning = false;
+                                rooms.value[item.roomNo].mail = false;
+                                count++;
+                            }
+                        }
+                    });
+                    saveData();
+                    showUnifiedHandoverModal.value = false;
+                    showToast(`${count}件の預かり物を引渡完了しました`);
                 };
 
                 const openQuickBatch = (type) => {
@@ -1022,15 +1297,17 @@
                             else if (batchModalTitle.value.includes('クリーニング')) r.cleaning = true;
                             else if (batchModalTitle.value.includes('郵便')) r.mail = true;
                         } else {
-                            if (batchContractState.value === 'contract') {
-                                r.isContracted = true;
+                            if (batchContractState.value === 'contracted') {
+                                r.contractStatus = 'contracted';
                                 if (r.status === 'long_absent') r.status = 'out';
                             } else if (batchContractState.value === 'vacant') {
-                                r.isContracted = false;
+                                r.contractStatus = 'vacant';
+                                r.status = 'out';
+                            } else if (batchContractState.value === 'uncontracted') {
+                                r.contractStatus = 'uncontracted';
                                 r.status = 'out';
                             } else if (batchContractState.value === 'long_absent') {
                                 r.status = 'long_absent';
-                                r.isContracted = false;
                             }
                             if (batchItemsState.value.parcel) r.parcel = true;
                             if (batchItemsState.value.cleaning) r.cleaning = true;
@@ -1044,7 +1321,6 @@
                 };
 
                 const openResetModal = () => {
-                    resetMenuTab.value = 'items';
                     showResetModal.value = true;
                 };
 
@@ -1059,111 +1335,192 @@
                     showToast('すべての預かり物をクリアしました');
                 };
 
-                const resetItemCategory = (cat) => {
+                const resetItemCategory = (category) => {
                     Object.keys(rooms.value).forEach(rNo => {
-                        rooms.value[rNo][cat] = false;
+                        rooms.value[rNo][category] = false;
                     });
                     saveData();
                     showResetModal.value = false;
-                    showToast('預かり物カテゴリをクリアしました');
+                    showToast(`すべての${category === 'parcel' ? '荷物' : category === 'cleaning' ? '洗濯' : '郵便'}をクリアしました`);
                 };
 
                 const resetStatus = (status) => {
                     Object.keys(rooms.value).forEach(rNo => {
-                        if (rooms.value[rNo].isContracted && rooms.value[rNo].status !== 'long_absent') {
-                            rooms.value[rNo].status = status;
+                        const r = rooms.value[rNo];
+                        if (r.contractStatus === 'contracted' && r.status !== 'long_absent') {
+                            r.status = status;
                         }
                     });
                     saveData();
                     showResetModal.value = false;
-                    showToast(`全契約室を「${status === 'in' ? '在館' : '外出'}」に変更`);
+                    showToast(`全室のステータスを「${status === 'in' ? '在館' : '外出'}」に変更しました`);
                 };
 
                 const resetAllStatusAndItems = () => {
                     Object.keys(rooms.value).forEach(rNo => {
-                        if (rooms.value[rNo].isContracted && rooms.value[rNo].status !== 'long_absent') {
-                            rooms.value[rNo].status = 'out';
-                            rooms.value[rNo].parcel = false;
-                            rooms.value[rNo].cleaning = false;
-                            rooms.value[rNo].mail = false;
+                        const r = rooms.value[rNo];
+                        if (r.status !== 'long_absent') {
+                            if (r.contractStatus === 'contracted') {
+                                r.status = 'out';
+                            }
+                        }
+                        r.parcel = false;
+                        r.cleaning = false;
+                        r.mail = false;
+                    });
+                    saveData();
+                    showResetModal.value = false;
+                    showToast('一括「外出」+ 預かり物消去を実行しました');
+                };
+
+                const exportCurrentStateCsv = () => {
+                    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+                    csvContent += "号室,契約状況,在室ステータス,AirPay,荷物,洗濯,郵便\n";
+                    Object.keys(rooms.value).sort().forEach(rNo => {
+                        const r = rooms.value[rNo];
+                        let cStatusText = "契約中";
+                        if (r.contractStatus === 'vacant') cStatusText = "空室";
+                        else if (r.contractStatus === 'uncontracted') cStatusText = "未契約";
+
+                        let statusText = "外出";
+                        if (r.status === 'in') statusText = "在館";
+                        else if (r.status === 'long_absent') statusText = "長期不在";
+
+                        csvContent += `${rNo},${cStatusText},${statusText},${r.isAirpay ? '有' : '無'},${r.parcel ? '有' : '無'},${r.cleaning ? '有' : '無'},${r.mail ? '有' : '無'}\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `apartment_status_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showToast('日本語CSVファイルを出力しました');
+                };
+
+                const handleCsvUpload = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        parseCsvData(text);
+                    };
+                    reader.readAsText(file, 'UTF-8');
+                };
+
+                const parseCsvData = (text) => {
+                    const lines = text.split('\n');
+                    let count = 0;
+                    lines.forEach((line, idx) => {
+                        if (idx === 0 || !line.trim()) return;
+                        const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                        if (cols.length >= 7) {
+                            const rNo = cols[0];
+                            if (rooms.value[rNo]) {
+                                const cVal = cols[1];
+                                if (cVal === '空室') {
+                                    rooms.value[rNo].contractStatus = 'vacant';
+                                    rooms.value[rNo].status = 'out';
+                                } else if (cVal === '未契約') {
+                                    rooms.value[rNo].contractStatus = 'uncontracted';
+                                    rooms.value[rNo].status = 'out';
+                                } else if (cVal === '契約中' || cVal === '1' || cVal === 'true' || cVal === 'contracted') {
+                                    rooms.value[rNo].contractStatus = 'contracted';
+                                }
+
+                                const sVal = cols[2];
+                                if (sVal === '在館' || sVal === 'in') {
+                                    rooms.value[rNo].status = 'in';
+                                    if (rooms.value[rNo].contractStatus !== 'contracted') {
+                                        rooms.value[rNo].contractStatus = 'contracted';
+                                    }
+                                } else if (sVal === '長期不在') {
+                                    rooms.value[rNo].status = 'long_absent';
+                                } else if (sVal === '外出' || sVal === 'out') {
+                                    if (rooms.value[rNo].status !== 'long_absent') {
+                                        rooms.value[rNo].status = 'out';
+                                    }
+                                }
+
+                                const parseBool = (val) => val === '有' || val === '1' || val === 'true' || val === 'TRUE';
+                                rooms.value[rNo].isAirpay = parseBool(cols[3]);
+                                rooms.value[rNo].parcel = parseBool(cols[4]);
+                                rooms.value[rNo].cleaning = parseBool(cols[5]);
+                                rooms.value[rNo].mail = parseBool(cols[6]);
+                                count++;
+                            }
                         }
                     });
                     saveData();
                     showResetModal.value = false;
-                    showToast('一括リセットを実行しました');
+                    showToast(`${count}件のデータをCSVから反映しました`);
                 };
 
-                const updateActiveItemRoomsList = () => {
-                    const list = [];
-                    Object.keys(rooms.value).forEach(rNo => {
-                        const r = rooms.value[rNo];
-                        if ((r.isContracted || r.status === 'long_absent') && (r.parcel || r.cleaning || r.mail)) {
-                            list.push({ roomNo: rNo, selected: false });
-                        }
-                    });
-                    activeItemRooms.value = list;
-                };
-
-                const openUnifiedHandoverModal = () => {
-                    updateActiveItemRoomsList();
-                    showUnifiedHandoverModal.value = true;
-                };
-
-                const selectAllHandoverRooms = (val) => {
-                    activeItemRooms.value.forEach(item => {
-                        item.selected = val;
-                    });
-                };
-
-                const executeHandoverClear = () => {
-                    let count = 0;
-                    activeItemRooms.value.forEach(item => {
-                        if (item.selected) {
-                            rooms.value[item.roomNo].parcel = false;
-                            rooms.value[item.roomNo].cleaning = false;
-                            rooms.value[item.roomNo].mail = false;
-                            count++;
-                        }
-                    });
-                    saveData();
-                    showUnifiedHandoverModal.value = false;
-                    showToast(`${count}件のお部屋を引き渡し完了しました`);
-                };
-
-                const currentDateString = ref('');
-                const currentTimeString = ref('');
-                const currentWeather = ref('晴れ');
-                const weatherIcon = ref('fa-solid fa-sun text-amber-500');
-
-                const updateDateTime = () => {
-                    const now = new Date();
-                    const month = now.getMonth() + 1;
-                    const date = now.getDate();
-                    const days = ['日', '月', '火', '水', '木', '金', '土'];
-                    const dayName = days[now.getDay()];
-                    currentDateString.value = `${month}月${date}日(${dayName})`;
-
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    currentTimeString.value = `${hours}:${minutes}`;
-                };
-
-                onMounted(() => { 
-                    initLocalStorage(); 
+                onMounted(() => {
+                    initLocalStorage();
                     updateDateTime();
-                    setInterval(updateDateTime, 10000);
+                    setInterval(updateDateTime, 1000);
                 });
 
                 return {
-                    rawFloors, displayFloors, rooms, handleRoomClick, getRoomCardClass, getRoomNumberClass,
-                    countStatus, showBatchModal, openBatchModal, openQuickBatch, batchModalTitle, batchModalIcon,
-                    batchTargetInput, batchItems, batchContractState, batchItemsState, executeBatchUpdate,
-                    showResetModal, resetMenuTab, openResetModal, resetStatus, resetAllItems, resetItemCategory,
-                    resetAllStatusAndItems, showSingleRoomModalFlag, targetRoomNo, openSingleRoomModal,
-                    setRoomContract, setRoomStatus, toggleAirpay, toggleRoomItem,
-                    handoverAllForRoom, startPress, cancelPress, toastMessage, showUnifiedHandoverModal,
-                    activeItemRooms, openUnifiedHandoverModal, selectAllHandoverRooms, executeHandoverClear,
-                    currentDateString, currentTimeString, currentWeather, weatherIcon
+                    displayFloors,
+                    rooms,
+                    toastMessage,
+                    showUnifiedHandoverModal,
+                    spreadsheetCsvUrl,
+                    gasWebAppUrl,
+                    isSyncing,
+                    showSingleRoomModalFlag,
+                    targetRoomNo,
+                    showBatchModal,
+                    showResetModal,
+                    resetMenuTab,
+                    isLocked,
+                    inputPassword,
+                    passwordError,
+                    batchModalTitle,
+                    batchModalIcon,
+                    batchTargetInput,
+                    batchItems,
+                    batchContractState,
+                    batchItemsState,
+                    activeItemRooms,
+                    currentDateString,
+                    currentTimeString,
+                    currentWeather,
+                    weatherIcon,
+                    verifyPassword,
+                    showToast,
+                    handleRoomClick,
+                    startPress,
+                    cancelPress,
+                    openSingleRoomModal,
+                    getRoomCardClass,
+                    getRoomNumberClass,
+                    countStatus,
+                    setRoomContract,
+                    setRoomStatus,
+                    toggleAirpay,
+                    toggleRoomItem,
+                    updateActiveItemRoomsList,
+                    openUnifiedHandoverModal,
+                    selectAllHandoverRooms,
+                    handoverAllForRoom,
+                    executeHandoverClear,
+                    openQuickBatch,
+                    openBatchModal,
+                    executeBatchUpdate,
+                    openResetModal,
+                    resetAllItems,
+                    resetItemCategory,
+                    resetStatus,
+                    resetAllStatusAndItems,
+                    exportCurrentStateCsv,
+                    handleCsvUpload,
+                    saveGasUrl,
+                    syncFromGas,
+                    syncToGas
                 };
             }
         }).mount('#app');
