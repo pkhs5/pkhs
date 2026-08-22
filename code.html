@@ -26,8 +26,15 @@
             from { opacity: 0; transform: scale(0.98); }
             to { opacity: 1; transform: scale(1); }
         }
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.12); opacity: 0.85; }
+        }
         .animate-fade-in {
             animation: fadeIn 0.15s ease-out forwards;
+        }
+        .animate-pulse-icon {
+            animation: pulseIcon 1.5s infinite ease-in-out;
         }
         button:active, .room-card:active {
             transform: scale(0.94);
@@ -39,8 +46,8 @@
     <div id="app" class="h-screen w-screen flex flex-col bg-slate-100 p-0.5 gap-0.5 overflow-hidden box-border">
 
         <!-- パスワードロック画面 -->
-        <div v-if="isLocked" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col p-6 space-y-4">
+        <div v-if="isLocked" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col p-6 space-y-4 pointer-events-auto">
                 <div class="text-center space-y-1">
                     <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl mb-2 shadow-inner">
                         <i class="fa-solid fa-lock"></i>
@@ -61,7 +68,7 @@
                     </div>
                     <button 
                         type="submit" 
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black py-3 rounded-xl shadow-md transition text-xs flex items-center justify-center space-x-1.5"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black py-3 rounded-xl shadow-md transition text-xs flex items-center justify-center space-x-1.5 cursor-pointer pointer-events-auto"
                     >
                         <i class="fa-solid fa-key"></i>
                         <span>ロックを解除する</span>
@@ -74,7 +81,7 @@
         </div>
 
         <!-- ヘッダー部分 -->
-        <header class="bg-white text-slate-800 shadow-xs shrink-0 border border-slate-200/80 rounded-xl px-2 py-0.5 flex flex-col gap-0.5">
+        <header class="bg-white text-slate-800 shadow-xs shrink-0 border border-slate-200/80 rounded-xl px-2 py-0.5 flex flex-col gap-0.5 z-10 relative pointer-events-auto">
             <div class="flex items-center justify-between text-[11px] gap-1 flex-wrap sm:flex-nowrap">
                 <!-- 左側：カウンタ -->
                 <div class="flex items-center space-x-1 shrink-0">
@@ -124,8 +131,9 @@
                 <!-- 右側：ボタン群 -->
                 <div class="flex items-center gap-1 shrink-0">
                     <button 
+                        type="button"
                         @click="openResetModal" 
-                        class="h-6 bg-slate-100 hover:bg-slate-200 active:scale-95 text-rose-600 text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 border border-slate-300 transition whitespace-nowrap"
+                        class="h-6 bg-slate-100 hover:bg-slate-200 active:scale-95 text-rose-600 text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 border border-slate-300 transition whitespace-nowrap cursor-pointer pointer-events-auto"
                         title="リセット・管理メニュー"
                     >
                         <i class="fa-solid fa-rotate-left"></i>
@@ -133,8 +141,9 @@
                     </button>
 
                     <button 
+                        type="button"
                         @click="openUnifiedHandoverModal" 
-                        class="h-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[10px] font-black px-2 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition border border-emerald-500 whitespace-nowrap"
+                        class="h-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-[10px] font-black px-2 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition border border-emerald-500 whitespace-nowrap cursor-pointer pointer-events-auto"
                         title="お預かり物の引渡・クリア処理"
                     >
                         <i class="fa-solid fa-hand-holding-heart"></i>
@@ -142,29 +151,33 @@
                     </button>
 
                     <button 
+                        type="button"
                         @click="openQuickBatch('parcel')" 
-                        class="h-6 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap cursor-pointer pointer-events-auto"
                     >
                         <i class="fa-solid fa-box"></i>
                         <span>荷物</span>
                     </button>
                     <button 
+                        type="button"
                         @click="openQuickBatch('cleaning')" 
-                        class="h-6 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap cursor-pointer pointer-events-auto"
                     >
                         <i class="fa-solid fa-shirt"></i>
                         <span>洗</span>
                     </button>
                     <button 
+                        type="button"
                         @click="openQuickBatch('mail')" 
-                        class="h-6 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap cursor-pointer pointer-events-auto"
                     >
                         <i class="fa-solid fa-envelope"></i>
                         <span>郵</span>
                     </button>
                     <button 
+                        type="button"
                         @click="openBatchModal" 
-                        class="h-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap"
+                        class="h-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-[10px] font-bold px-1.5 rounded-md shadow-xs flex items-center justify-center space-x-0.5 transition whitespace-nowrap cursor-pointer pointer-events-auto"
                     >
                         <i class="fa-solid fa-layer-group"></i>
                         <span>一括</span>
@@ -174,9 +187,9 @@
         </header>
 
         <!-- メインフロア表示 -->
-        <main class="flex-1 flex flex-col gap-0.5 overflow-hidden justify-between pr-0.5">
+        <main class="flex-1 flex flex-col gap-0.5 overflow-hidden justify-between pr-0.5 pointer-events-auto overflow-y-auto">
             <template v-for="floor in displayFloors" :key="floor.name">
-                <div class="flex items-center bg-white rounded-lg px-1.5 py-0.5 shadow-2xs border border-slate-200/80 shrink-0">
+                <div v-if="floorVisibility[floor.name]" class="flex items-center bg-white rounded-lg px-1.5 py-0.5 shadow-2xs border border-slate-200/80 shrink-0">
                     <!-- フロア名ラベル -->
                     <div class="w-9 sm:w-10 shrink-0 flex flex-col items-center justify-center font-bold text-slate-700 border-r border-slate-200 pr-1 mr-1">
                         <span class="text-[11px] font-black whitespace-nowrap text-slate-900">{{ floor.name }}</span>
@@ -198,60 +211,51 @@
                                         @mouseleave="cancelPress(roomNo, $event)"
                                         @contextmenu.prevent="openSingleRoomModal(roomNo)"
                                         :class="getRoomCardClass(roomNo)"
-                                        class="room-card h-[52px] sm:h-[54px] rounded-md px-0.5 py-0.5 flex flex-col justify-between items-center cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm"
+                                        class="room-card h-[54px] sm:h-[56px] rounded-md px-1 py-0.5 flex flex-col justify-center items-center cursor-pointer transition select-none relative box-border shadow-2xs hover:shadow-sm overflow-hidden pointer-events-auto"
                                     >
-                                        <!-- 上段：号室表示を大きく調整 -->
-                                        <div class="w-full flex items-center justify-between pt-0.5 px-0.5">
-                                            <span :class="getRoomNumberClass(roomNo)" class="text-[13px] sm:text-[14px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
+                                        <!-- 号室を枠一杯に大きく表示 -->
+                                        <div class="w-full flex items-center justify-center relative">
+                                            <span :class="getRoomNumberClass(roomNo)" class="text-[17px] sm:text-[19px] font-black tracking-tighter whitespace-nowrap select-none leading-none">
                                                 {{ roomNo }}
                                             </span>
-                                            <span v-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent' && rooms[roomNo].absentPeriod" class="text-[7.5px] bg-purple-200 text-purple-900 font-bold px-1 rounded truncate max-w-[34px]" :title="rooms[roomNo].absentPeriod">
+                                            <!-- 長期不在などの小さなバッジを右上へ配置 -->
+                                            <span v-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent' && rooms[roomNo].absentPeriod" class="absolute top-0 right-0 text-[7px] bg-purple-200 text-purple-900 font-bold px-1 rounded truncate max-w-[34px]" :title="rooms[roomNo].absentPeriod">
                                                 {{ rooms[roomNo].absentPeriod }}
+                                            </span>
+                                            <span v-else-if="rooms[roomNo] && rooms[roomNo].isAirpay" class="absolute top-0 right-0 text-[7px] bg-rose-600 text-white font-black px-1 rounded">
+                                                A
                                             </span>
                                         </div>
 
-                                        <!-- 中段：AirPayバッジや状態マーク -->
-                                        <div class="w-full flex items-center justify-center">
-                                            <span 
-                                                v-if="rooms[roomNo] && rooms[roomNo].isAirpay" 
-                                                class="px-1.5 py-0.5 rounded text-[8px] font-black leading-none" 
-                                                :class="rooms[roomNo].status === 'in' ? 'bg-white text-rose-600' : 'bg-rose-600 text-white'" 
-                                                title="AirPay"
-                                            >AirPay</span>
-                                            <span 
-                                                v-else-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent'" 
-                                                class="text-[9px] text-purple-700 font-bold leading-none animate-pulse"
-                                            >長期不在</span>
-                                            <span 
-                                                v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'vacant'" 
-                                                class="text-[9px] text-blue-700 font-bold leading-none"
-                                            >空室</span>
-                                            <span 
-                                                v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'uncontracted'" 
-                                                class="text-[9px] text-slate-500 font-bold leading-none"
-                                            >未契約</span>
-                                        </div>
-
-                                        <!-- 下段：大きく表示されたお預かり物アイコン -->
-                                        <div class="w-full flex items-center justify-center space-x-1 pb-0.5">
-                                            <span 
-                                                v-if="rooms[roomNo] && rooms[roomNo].parcel"
-                                                class="bg-blue-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
-                                                title="荷物あり"
-                                            >荷</span>
-                                            <span 
-                                                v-if="rooms[roomNo] && rooms[roomNo].cleaning"
-                                                class="bg-purple-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
-                                                title="洗濯あり"
-                                            >洗</span>
-                                            <span 
-                                                v-if="rooms[roomNo] && rooms[roomNo].mail"
-                                                class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-black leading-tight shadow-sm"
-                                                title="郵便あり"
-                                            >郵</span>
+                                        <!-- 下段：お預かり物がある場合に2秒間隔で切り替えて大きくアピール表示 -->
+                                        <div class="w-full flex items-center justify-center h-4 mt-0.5">
+                                            <template v-if="getActiveItemsList(roomNo).length > 0">
+                                                <div class="animate-pulse-icon flex items-center justify-center">
+                                                    <span 
+                                                        class="px-2 py-0.5 rounded text-[10px] font-black leading-none shadow-sm"
+                                                        :class="getCurrentRotatedItemClass(roomNo)"
+                                                    >
+                                                        {{ getCurrentRotatedItemText(roomNo) }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <span 
+                                                    v-if="rooms[roomNo] && rooms[roomNo].status === 'long_absent'" 
+                                                    class="text-[8.5px] text-purple-700 font-bold leading-none"
+                                                >長期不在</span>
+                                                <span 
+                                                    v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'vacant'" 
+                                                    class="text-[8.5px] text-blue-700 font-bold leading-none"
+                                                >空室</span>
+                                                <span 
+                                                    v-else-if="rooms[roomNo] && rooms[roomNo].contractStatus === 'uncontracted'" 
+                                                    class="text-[8.5px] text-slate-500 font-bold leading-none"
+                                                >未契約</span>
+                                            </template>
                                         </div>
                                     </div>
-                                    <div v-else class="w-full h-full min-h-[52px] pointer-events-none opacity-0"></div>
+                                    <div v-else class="w-full h-full min-h-[54px] pointer-events-none opacity-0"></div>
                                 </template>
                             </div>
                         </template>
@@ -261,229 +265,205 @@
         </main>
 
         <!-- トースト通知 -->
-        <div 
-            v-if="toastMessage" 
-            class="fixed bottom-4 right-4 z-50 bg-slate-900/95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl border border-slate-700 flex items-center space-x-2 animate-fade-in"
-        >
-            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-            <span>{{ toastMessage }}</span>
+        <div v-if="toastMessage" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-900/90 text-white text-xs font-black px-4 py-2.5 rounded-full shadow-2xl z-50 animate-fade-in pointer-events-none border border-slate-700">
+            {{ toastMessage }}
         </div>
 
-        <!-- 統合引渡処理モーダル -->
-        <div v-if="showUnifiedHandoverModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
-                <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
-                    <div class="flex items-center space-x-2.5">
-                        <i class="fa-solid fa-hand-holding-heart text-emerald-100 text-lg"></i>
-                        <h3 class="font-black text-sm">お預かり物の引渡管理</h3>
+        <!-- 統合引渡完了・預かり物一括クリアモーダル -->
+        <div v-if="showUnifiedHandoverModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[85vh] pointer-events-auto">
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-hand-holding-heart text-base"></i>
+                        <h3 class="font-black text-sm">預かり物 引渡・クリア処理</h3>
                     </div>
-                    <button @click="showUnifiedHandoverModal = false" class="text-emerald-100 hover:text-white p-1 text-base">
+                    <button type="button" @click="showUnifiedHandoverModal = false" class="text-white/80 hover:text-white p-1 text-base cursor-pointer pointer-events-auto">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3 overflow-y-auto flex-1">
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900">
-                        <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>使い方:</p>
-                        現在お預かり物があるお部屋の一覧です。チェックボックスで選択して一括引渡を行うか、個別クリアボタンを押してください。
+                <div class="p-4 overflow-y-auto space-y-3 flex-1 text-xs pointer-events-auto">
+                    <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                        <span class="font-bold text-slate-700">現在お預かり物がある部屋：<strong class="text-emerald-700">{{ activeItemRooms.length }}</strong> 部屋</span>
+                        <div class="space-x-1">
+                            <button type="button" @click="selectAllHandoverRooms(true)" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 rounded font-bold text-[10px] cursor-pointer pointer-events-auto">全選択</button>
+                            <button type="button" @click="selectAllHandoverRooms(false)" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 rounded font-bold text-[10px] cursor-pointer pointer-events-auto">解除</button>
+                        </div>
                     </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-black text-slate-700">預かり物保持中のお部屋 ({{ activeItemRooms.length }}件)</span>
-                            <div class="space-x-3 text-xs">
-                                <button @click="selectAllHandoverRooms(true)" class="text-blue-600 hover:underline font-bold">すべて選択</button>
-                                <span class="text-slate-300">|</span>
-                                <button @click="selectAllHandoverRooms(false)" class="text-slate-500 hover:underline">すべて解除</button>
-                            </div>
-                        </div>
+                    <div v-if="activeItemRooms.length === 0" class="text-center py-10 text-slate-400 font-bold">
+                        現在、お預かり物のある部屋はありません。
+                    </div>
 
-                        <div v-if="activeItemRooms.length === 0" class="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-xs">
-                            現在、お預かり物のあるお部屋はありません。
-                        </div>
-
-                        <div v-else class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                            <div 
-                                v-for="item in activeItemRooms" 
-                                :key="item.roomNo"
-                                @click="item.selected = !item.selected"
-                                :class="item.selected ? 'bg-emerald-50/80 border-emerald-400' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'"
-                                class="flex items-center justify-between p-3 rounded-xl border transition cursor-pointer shadow-2xs"
-                            >
-                                <div class="flex items-center space-x-3">
-                                    <input type="checkbox" v-model="item.selected" @click.stop class="w-5 h-5 text-emerald-600 rounded-md bg-white border-slate-300 cursor-pointer">
-                                    <div>
-                                        <span class="font-black text-sm text-slate-900">{{ item.roomNo }}号室</span>
-                                        <div class="flex items-center space-x-1.5 mt-0.5">
-                                            <span v-if="rooms[item.roomNo]?.parcel" class="bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-bold px-1.5 py-0.2 rounded">荷物</span>
-                                            <span v-if="rooms[item.roomNo]?.cleaning" class="bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold px-1.5 py-0.2 rounded">クリーニング</span>
-                                            <span v-if="rooms[item.roomNo]?.mail" class="bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-bold px-1.5 py-0.2 rounded">郵便</span>
-                                        </div>
-                                    </div>
+                    <div v-else class="space-y-1.5 max-h-[45vh] overflow-y-auto pr-1">
+                        <div v-for="item in activeItemRooms" :key="item.roomNo" class="flex items-center justify-between bg-white border border-slate-200 p-2.5 rounded-xl hover:border-emerald-300 transition shadow-2xs">
+                            <label class="flex items-center space-x-3 cursor-pointer flex-1 pointer-events-auto">
+                                <input type="checkbox" v-model="item.selected" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-auto">
+                                <span class="font-black text-sm text-slate-900 w-12">{{ item.roomNo }}号室</span>
+                                <div class="flex items-center space-x-1">
+                                    <span v-if="rooms[item.roomNo]?.parcel" class="px-1.5 py-0.5 bg-blue-600 text-white font-bold text-[10px] rounded">荷物</span>
+                                    <span v-if="rooms[item.roomNo]?.cleaning" class="px-1.5 py-0.5 bg-purple-600 text-white font-bold text-[10px] rounded">洗濯</span>
+                                    <span v-if="rooms[item.roomNo]?.mail" class="px-1.5 py-0.5 bg-rose-600 text-white font-bold text-[10px] rounded">郵便</span>
                                 </div>
-                                <button 
-                                    @click.stop="handoverAllForRoom(item.roomNo)"
-                                    class="bg-white hover:bg-emerald-600 hover:text-white text-slate-700 text-xs font-bold px-3.5 py-2 rounded-lg border border-slate-300 transition shadow-2xs"
-                                >
-                                    個別クリア
-                                </button>
-                            </div>
+                            </label>
+                            <button type="button" @click="handoverAllForRoom(item.roomNo)" class="bg-slate-100 hover:bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1.5 rounded-lg border border-slate-300 text-[10px] transition cursor-pointer pointer-events-auto">
+                                この部屋のみ引渡
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end space-x-2 shrink-0">
-                    <button 
-                        @click="showUnifiedHandoverModal = false"
-                        class="bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-slate-300 transition"
-                    >
-                        閉じる
-                    </button>
-                    <button 
-                        @click="executeHandoverClear"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-5 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-1.5"
-                    >
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-end space-x-2 shrink-0">
+                    <button type="button" @click="showUnifiedHandoverModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition cursor-pointer pointer-events-auto">キャンセル</button>
+                    <button type="button" @click="executeHandoverClear" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-md transition cursor-pointer pointer-events-auto flex items-center space-x-1.5">
                         <i class="fa-solid fa-check"></i>
-                        <span>選択したお部屋の預かり物を引渡完了</span>
+                        <span>選択した部屋の預かり物を引渡完了にする</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 個別ルーム設定モーダル -->
-        <div v-if="showSingleRoomModalFlag" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
-                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200 shrink-0">
+        <!-- 単一号室管理モーダル -->
+        <div v-if="showSingleRoomModalFlag" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col pointer-events-auto">
+                <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
-                        <span class="bg-blue-600 text-white font-black px-2.5 py-0.5 rounded text-xs">{{ targetRoomNo }}号室</span>
-                        <h3 class="font-black text-sm">ルーム個別管理</h3>
+                        <i class="fa-solid fa-door-open text-amber-400 text-base"></i>
+                        <h3 class="font-black text-sm">{{ targetRoomNo }}号室 個別管理メニュー</h3>
                     </div>
-                    <button @click="showSingleRoomModalFlag = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                    <button type="button" @click="showSingleRoomModalFlag = false" class="text-slate-400 hover:text-white p-1 text-base cursor-pointer pointer-events-auto">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3 overflow-y-auto flex-1" v-if="rooms[targetRoomNo]">
-                    <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-slate-600 block">契約ステータス変更</span>
+                <div class="p-4 space-y-4 text-xs pointer-events-auto">
+                    <!-- 契約状況変更 -->
+                    <div class="space-y-1.5">
+                        <span class="font-bold text-slate-500 block">■ 契約・状態区分</span>
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
+                                type="button"
                                 @click="setRoomContract('contracted')"
-                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.contractStatus === 'contracted' ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-user-check"></i>
-                                <span>契約中</span>
+                                契約中
                             </button>
                             <button 
+                                type="button"
                                 @click="setRoomContract('vacant')"
-                                :class="rooms[targetRoomNo].contractStatus === 'vacant' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-blue-500 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.contractStatus === 'vacant' ? 'bg-blue-600 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-door-open"></i>
-                                <span>空室</span>
+                                空室
                             </button>
                             <button 
+                                type="button"
                                 @click="setRoomContract('uncontracted')"
-                                :class="rooms[targetRoomNo].contractStatus === 'uncontracted' && rooms[targetRoomNo].status !== 'long_absent' ? 'bg-slate-700 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.contractStatus === 'uncontracted' ? 'bg-slate-700 text-white font-black' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-ban"></i>
-                                <span>未契約</span>
+                                未契約
                             </button>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-slate-600 block">在室状況 / 長期不在</span>
+                    <!-- 在室ステータス切替 -->
+                    <div v-if="rooms[targetRoomNo]?.contractStatus === 'contracted'" class="space-y-1.5">
+                        <span class="font-bold text-slate-500 block">■ 在室・不在ステータス</span>
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
+                                type="button"
                                 @click="setRoomStatus('in')"
-                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status === 'in' ? 'bg-emerald-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
+                                :class="rooms[targetRoomNo]?.status === 'in' ? 'bg-emerald-600 text-white font-black shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-house mb-0.5"></i>
-                                <span>在館</span>
+                                在館
                             </button>
                             <button 
+                                type="button"
                                 @click="setRoomStatus('out')"
-                                :class="rooms[targetRoomNo].contractStatus === 'contracted' && rooms[targetRoomNo].status === 'out' ? 'bg-amber-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
+                                :class="rooms[targetRoomNo]?.status === 'out' ? 'bg-amber-600 text-white font-black shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-person-walking-arrow-right mb-0.5"></i>
-                                <span>外出</span>
+                                外出
                             </button>
                             <button 
-                                @click="openLongAbsentPrompt"
-                                :class="rooms[targetRoomNo].status === 'long_absent' ? 'bg-purple-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center border border-slate-300"
+                                type="button"
+                                @click="setRoomStatus('long_absent')"
+                                :class="rooms[targetRoomNo]?.status === 'long_absent' ? 'bg-purple-600 text-white font-black shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                class="py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-plane mb-0.5"></i>
-                                <span>長期不在</span>
+                                長期不在
                             </button>
                         </div>
                     </div>
 
-                    <!-- 長期不在期間設定のインライン入力 -->
-                    <div v-if="isSettingLongAbsent" class="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-2 animate-fade-in">
-                        <span class="text-xs font-bold text-purple-900 block">長期不在の期間（任意・例: 8/20~8/25、未入力可）</span>
+                    <!-- 長期不在期間設定サブフォーム -->
+                    <div v-if="isSettingLongAbsent" class="bg-purple-50 border border-purple-200 p-3 rounded-xl space-y-2">
+                        <span class="font-bold text-purple-900 block">長期不在の期間（任意）</span>
                         <input 
                             type="text" 
                             v-model="tempAbsentPeriod" 
-                            placeholder="期間を入力（例: 8/20-25）" 
+                            placeholder="例: 8/1〜8/15" 
                             class="w-full bg-white border border-purple-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                        <div class="flex justify-end space-x-2">
-                            <button @click="isSettingLongAbsent = false" class="bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300">キャンセル</button>
-                            <button @click="confirmLongAbsent" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-black px-4 py-1.5 rounded-lg">設定する</button>
+                        <div class="flex space-x-2">
+                            <button type="button" @click="isSettingLongAbsent = false" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-1.5 rounded-lg font-bold cursor-pointer pointer-events-auto">戻る</button>
+                            <button type="button" @click="confirmLongAbsent" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg font-black cursor-pointer pointer-events-auto">確定する</button>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-slate-600 block">AirPay (A情報) 管理</span>
+                    <!-- AirPayトグル -->
+                    <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="font-bold text-slate-700">AirPay端末 貸出中</span>
                         <button 
+                            type="button"
                             @click="toggleAirpay"
-                            :class="rooms[targetRoomNo].isAirpay ? 'bg-rose-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                            class="w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 border border-slate-300"
+                            :class="rooms[targetRoomNo]?.isAirpay ? 'bg-rose-600 text-white font-black' : 'bg-slate-200 text-slate-700'"
+                            class="px-4 py-1.5 rounded-lg text-xs transition cursor-pointer font-bold pointer-events-auto"
                         >
-                            <i class="fa-solid fa-credit-card"></i>
-                            <span>{{ rooms[targetRoomNo].isAirpay ? 'AirPay適用中 (解除するにはタップ)' : 'AirPay情報を設定する' }}</span>
+                            {{ rooms[targetRoomNo]?.isAirpay ? '貸出中 (ON)' : 'なし (OFF)' }}
                         </button>
                     </div>
 
-                    <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-slate-600 block">お預かり物</span>
+                    <!-- 預かり物トグル -->
+                    <div class="space-y-1.5">
+                        <span class="font-bold text-slate-500 block">■ お預かり物</span>
                         <div class="grid grid-cols-3 gap-1.5">
                             <button 
+                                type="button"
                                 @click="toggleRoomItem('parcel')"
-                                :class="rooms[targetRoomNo].parcel ? 'bg-blue-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.parcel ? 'bg-blue-600 text-white font-black shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs transition border border-slate-300 flex flex-col items-center justify-center space-y-0.5 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-box"></i>
+                                <i class="fa-solid fa-box text-sm"></i>
                                 <span>荷物</span>
                             </button>
                             <button 
+                                type="button"
                                 @click="toggleRoomItem('cleaning')"
-                                :class="rooms[targetRoomNo].cleaning ? 'bg-purple-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.cleaning ? 'bg-purple-600 text-white font-black shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs transition border border-slate-300 flex flex-col items-center justify-center space-y-0.5 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-shirt"></i>
+                                <i class="fa-solid fa-shirt text-sm"></i>
                                 <span>洗濯</span>
                             </button>
                             <button 
+                                type="button"
                                 @click="toggleRoomItem('mail')"
-                                :class="rooms[targetRoomNo].mail ? 'bg-rose-600 text-white font-black shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                                class="py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 border border-slate-300"
+                                :class="rooms[targetRoomNo]?.mail ? 'bg-rose-600 text-white font-black shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="py-2.5 rounded-xl text-xs transition border border-slate-300 flex flex-col items-center justify-center space-y-0.5 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-envelope"></i>
+                                <i class="fa-solid fa-envelope text-sm"></i>
                                 <span>郵便</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end shrink-0">
-                    <button @click="showSingleRoomModalFlag = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end">
+                    <button type="button" @click="showSingleRoomModalFlag = false" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold transition cursor-pointer pointer-events-auto">
                         閉じる
                     </button>
                 </div>
@@ -491,176 +471,171 @@
         </div>
 
         <!-- 一括登録モーダル -->
-        <div v-if="showBatchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
-                <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+        <div v-if="showBatchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 flex flex-col pointer-events-auto">
+                <div class="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
-                        <i :class="batchModalIcon" class="text-indigo-600 text-base"></i>
+                        <i :class="batchModalIcon" class="text-base"></i>
                         <h3 class="font-black text-sm">{{ batchModalTitle }}</h3>
                     </div>
-                    <button @click="showBatchModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                    <button type="button" @click="showBatchModal = false" class="text-white/80 hover:text-white p-1 text-base cursor-pointer pointer-events-auto">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3">
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700">対象号室 (例: 101, 205 または 101-105)</label>
+                <div class="p-4 space-y-3 text-xs pointer-events-auto">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">対象号室（カンマ区切り、または範囲ハイフン可）</label>
                         <input 
                             type="text" 
-                            v-model="batchTargetInput"
-                            placeholder="部屋番号を入力" 
+                            v-model="batchTargetInput" 
+                            placeholder="例: 701, 702, 801-805" 
                             class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                     </div>
 
-                    <div v-if="batchItems" class="space-y-1">
-                        <span class="block text-xs font-bold text-slate-700">登録種別</span>
-                        <div class="bg-indigo-50 p-3 rounded-xl text-xs font-black text-indigo-900 flex items-center space-x-2 border border-indigo-200">
-                            <i :class="batchModalIcon" class="text-base text-indigo-600"></i>
-                            <span>{{ batchModalTitle }} を登録します</span>
-                        </div>
+                    <div v-if="!batchItems" class="space-y-2">
+                        <span class="font-bold text-slate-700 block">契約状態の変更</span>
+                        <select v-model="batchContractState" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold pointer-events-auto">
+                            <option value="keep">変更しない</option>
+                            <option value="contracted">契約中に変更</option>
+                            <option value="vacant">空室に変更</option>
+                            <option value="uncontracted">未契約に変更</option>
+                            <option value="long_absent">長期不在に変更</option>
+                        </select>
                     </div>
 
-                    <div v-else class="space-y-2.5">
-                        <div class="space-y-1">
-                            <span class="block text-xs font-bold text-slate-700">ステータス変更</span>
-                            <select v-model="batchContractState" class="w-full bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-3 py-2.5 text-xs font-bold">
-                                <option value="keep">変更しない（現在のまま）</option>
-                                <option value="contracted">契約中にする</option>
-                                <option value="vacant">空室にする</option>
-                                <option value="uncontracted">未契約にする</option>
-                                <option value="long_absent">長期不在にする</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="block text-xs font-bold text-slate-700">お預かり物追加</span>
-                            <div class="grid grid-cols-3 gap-1.5">
-                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
-                                    <input type="checkbox" v-model="batchItemsState.parcel" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
-                                    <span>荷物</span>
-                                </label>
-                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
-                                    <input type="checkbox" v-model="batchItemsState.cleaning" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
-                                    <span>洗濯</span>
-                                </label>
-                                <label class="flex items-center space-x-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs font-bold cursor-pointer text-slate-700">
-                                    <input type="checkbox" v-model="batchItemsState.mail" class="w-4 h-4 text-indigo-600 rounded bg-white border-slate-300">
-                                    <span>郵便</span>
-                                </label>
-                            </div>
+                    <div v-if="!batchItems" class="space-y-2">
+                        <span class="font-bold text-slate-700 block">預かり物の追加</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="flex items-center space-x-1.5 bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer pointer-events-auto">
+                                <input type="checkbox" v-model="batchItemsState.parcel" class="w-3.5 h-3.5 text-indigo-600 rounded pointer-events-auto">
+                                <span class="font-bold">荷物</span>
+                            </label>
+                            <label class="flex items-center space-x-1.5 bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer pointer-events-auto">
+                                <input type="checkbox" v-model="batchItemsState.cleaning" class="w-3.5 h-3.5 text-indigo-600 rounded pointer-events-auto">
+                                <span class="font-bold">洗濯</span>
+                            </label>
+                            <label class="flex items-center space-x-1.5 bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer pointer-events-auto">
+                                <input type="checkbox" v-model="batchItemsState.mail" class="w-3.5 h-3.5 text-indigo-600 rounded pointer-events-auto">
+                                <span class="font-bold">郵便</span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end space-x-2">
-                    <button @click="showBatchModal = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
-                        キャンセル
-                    </button>
-                    <button @click="executeBatchUpdate" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-5 py-2 rounded-lg shadow-sm transition">
-                        実行する
-                    </button>
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex space-x-2">
+                    <button type="button" @click="showBatchModal = false" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-bold transition cursor-pointer pointer-events-auto">キャンセル</button>
+                    <button type="button" @click="executeBatchUpdate" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-black shadow transition cursor-pointer pointer-events-auto">一括適用</button>
                 </div>
             </div>
         </div>
 
-                <!-- リセットメニューモーダル (指定のメニュー構成: 預かり物クリア・在館/外在切替・一括消去・CSV/連携) -->
-                <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col">
+        <!-- リセットメニューモーダル -->
+        <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
+            <div class="bg-white text-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 flex flex-col pointer-events-auto">
                 <div class="bg-slate-100 text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-gears text-slate-700 text-base"></i>
-                        <h3 class="font-black text-sm">システム管理メニュー</h3>
+                        <h3 class="font-black text-sm">システム管理・データ一括メニュー</h3>
                     </div>
-                    <button @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-1 text-base">
+                    <button type="button" @click="showResetModal = false" class="text-slate-500 hover:text-slate-800 p-2 text-base cursor-pointer pointer-events-auto">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3">
+                <div class="p-4 space-y-3 pointer-events-auto">
                     <div class="flex border-b border-slate-200 pb-2 space-x-1 overflow-x-auto">
                         <button 
+                            type="button"
                             @click="resetMenuTab = 'items'" 
                             :class="resetMenuTab === 'items' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap cursor-pointer pointer-events-auto"
                         >
                             預かり物クリア
                         </button>
                         <button 
+                            type="button"
                             @click="resetMenuTab = 'status'" 
                             :class="resetMenuTab === 'status' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-slate-300 shadow-2xs whitespace-nowrap cursor-pointer pointer-events-auto"
                         >
                             在館/外在切替
                         </button>
                         <button 
+                            type="button"
                             @click="resetMenuTab = 'danger'" 
                             :class="resetMenuTab === 'danger' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
-                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-rose-200 shadow-2xs whitespace-nowrap"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-rose-200 shadow-2xs whitespace-nowrap cursor-pointer pointer-events-auto"
                         >
                             一括消去
                         </button>
                         <button 
+                            type="button"
+                            @click="resetMenuTab = 'floors'" 
+                            :class="resetMenuTab === 'floors' ? 'bg-blue-700 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100'"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-blue-300 shadow-2xs whitespace-nowrap cursor-pointer pointer-events-auto"
+                        >
+                            フロア表示切替
+                        </button>
+                        <button 
+                            type="button"
                             @click="resetMenuTab = 'csv'" 
                             :class="resetMenuTab === 'csv' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'"
-                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-emerald-300 shadow-2xs whitespace-nowrap"
+                            class="flex-1 py-2 px-1 rounded-lg text-[10px] font-bold transition border border-emerald-300 shadow-2xs whitespace-nowrap cursor-pointer pointer-events-auto"
                         >
                             CSV/連携
                         </button>
                     </div>
 
-                    <!-- 1. 預かり物クリア -->
                     <div v-if="resetMenuTab === 'items'" class="space-y-3">
-                        <p class="text-xs text-slate-600">
-                            全契約室の【荷物・クリーニング・郵便】の預かり状況をクリア（引き渡し完了）します。
-                        </p>
-                        <div class="space-y-2">
+                        <div class="grid grid-cols-1 gap-2">
                             <button 
                                 type="button"
                                 @click="resetAllItems" 
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-xs transition flex items-center justify-center space-x-2"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-xs transition flex items-center justify-between cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-boxes-packing"></i>
-                                <span>すべての預かり物をクリアする</span>
+                                <span class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-boxes-packing text-sm"></i>
+                                    <span>すべての預かり物をクリア（荷物・洗濯・郵便）</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
                             </button>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button 
-                                    type="button"
-                                    @click="resetItemCategory('parcel')" 
-                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
-                                >
-                                    荷物クリア
-                                </button>
-                                <button 
-                                    type="button"
-                                    @click="resetItemCategory('cleaning')" 
-                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
-                                >
-                                    洗濯クリア
-                                </button>
-                                <button 
-                                    type="button"
-                                    @click="resetItemCategory('mail')" 
-                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-2 rounded-xl border border-slate-300 transition"
-                                >
-                                    郵便クリア
-                                </button>
-                            </div>
+                            <button 
+                                type="button"
+                                @click="resetItemCategory('parcel')" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-between cursor-pointer pointer-events-auto"
+                            >
+                                <span>荷物のみすべてクリア</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                            <button 
+                                type="button"
+                                @click="resetItemCategory('cleaning')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-between cursor-pointer pointer-events-auto"
+                            >
+                                <span>洗濯物のみすべてクリア</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                            <button 
+                                type="button"
+                                @click="resetItemCategory('mail')" 
+                                class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-between cursor-pointer pointer-events-auto"
+                            >
+                                <span>郵便物のみすべてクリア</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- 2. 在館/外在切替 -->
                     <div v-if="resetMenuTab === 'status'" class="space-y-3">
-                        <p class="text-xs text-slate-600">
-                            全契約室（長期不在を除く）の【在館/外出ステータス】を一括で切り替えます。
-                        </p>
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                            <span class="block text-xs font-bold text-slate-700">【在館 / 外出】一括切替</span>
+                            <span class="block text-xs font-bold text-slate-700">【在館 / 外在】一括変更</span>
                             <div class="grid grid-cols-2 gap-2">
                                 <button 
                                     type="button"
                                     @click="resetStatus('in')" 
-                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer pointer-events-auto"
                                 >
                                     <i class="fa-solid fa-house"></i>
                                     <span>全室「在館」にする</span>
@@ -668,7 +643,7 @@
                                 <button 
                                     type="button"
                                     @click="resetStatus('out')" 
-                                    class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
+                                    class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-3 px-3 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer pointer-events-auto"
                                 >
                                     <i class="fa-solid fa-person-walking-arrow-right"></i>
                                     <span>全室「外出」にする</span>
@@ -677,95 +652,66 @@
                         </div>
                     </div>
 
-                    <!-- 3. 一括消去 -->
                     <div v-if="resetMenuTab === 'danger'" class="space-y-3">
-                        <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200 space-y-2.5">
-                            <div class="flex items-center space-x-1.5 text-rose-700 font-bold text-xs">
-                                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
-                                <span>【一括消去】すべての状態を「外出」に変更 + 預かり物クリア</span>
-                            </div>
-                            <p class="text-[11px] text-rose-800/90 leading-relaxed">
-                                契約中の部屋を「外出」にし、すべての預かり物を一括で全消去します。<br>
-                                <strong>※「空室」「未契約」「長期不在」「AirPay」の情報は保持されます。</strong>
-                            </p>
+                        <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl space-y-2">
+                            <span class="text-xs font-black text-rose-800 block">一括消去・初期化処理</span>
+                            <p class="text-[11px] text-rose-700">全室のステータスを「外出」に戻し、同時にすべての預かり物（荷物・洗濯・郵便）をクリアします。</p>
                             <button 
                                 type="button"
                                 @click="resetAllStatusAndItems" 
-                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5"
+                                class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-black py-3 rounded-xl shadow transition flex items-center justify-center space-x-1.5 cursor-pointer pointer-events-auto"
                             >
-                                <i class="fa-solid fa-rotate-left"></i>
-                                <span>一括消去を実行する</span>
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>外出切替 ＋ 全預かり物クリアを実行</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 4. CSV/連携 -->
-                    <div v-if="resetMenuTab === 'csv'" class="space-y-3 text-xs">
-                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-emerald-900 leading-relaxed text-[11px]">
-                            <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>GAS Webアプリ連携:</p>
-                            Google Apps Script (GAS) のWebアプリURLを設定すると、ボタン一つでスプレッドシートと双方向のデータ同期（読込・保存）が可能です。
+                    <div v-if="resetMenuTab === 'floors'" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1 text-xs">
+                        <div class="bg-blue-50 border border-blue-200 p-2.5 rounded-xl text-blue-900 font-bold mb-2">
+                            画面に表示するフロアのチェックを入れてください。
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label v-for="floor in rawFloors" :key="floor.name" class="flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 cursor-pointer pointer-events-auto">
+                                <input type="checkbox" v-model="floorVisibility[floor.name]" @change="saveFloorVisibility" class="w-4 h-4 text-blue-600 rounded pointer-events-auto">
+                                <span class="font-black text-slate-800">{{ floor.name }}</span>
+                            </label>
+                        </div>
+                    </div>
 
-                        <div class="space-y-1.5">
-                            <span class="font-bold text-slate-700 block text-[11px]">GAS Webアプリ URL</span>
-                            <div class="flex space-x-1.5">
-                                <input 
-                                    type="text" 
-                                    v-model="gasWebAppUrl" 
-                                    placeholder="https://script.google.com/macros/s/.../exec" 
-                                    class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                >
-                                <button 
-                                    @click="saveGasUrl" 
-                                    class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1.5 rounded-xl transition shrink-0 text-[11px]"
-                                >
-                                    保存
+                    <div v-if="resetMenuTab === 'csv'" class="space-y-3 text-xs">
+                        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl space-y-2.5">
+                            <span class="font-black text-emerald-900 block text-xs">Googleスプレッドシート連携 (GAS)</span>
+                            <p class="text-[11px] text-emerald-700">固定URLを使用してGoogleスプレッドシートとデータを同期します。</p>
+                            <div class="flex space-x-2">
+                                <button type="button" @click="syncFromGas" :disabled="isSyncing" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2.5 rounded-lg font-bold flex-1 cursor-pointer pointer-events-auto">
+                                    {{ isSyncing ? '同期中...' : 'スプレッドシートから読込' }}
+                                </button>
+                                <button type="button" @click="syncToGas" :disabled="isSyncing" class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-2.5 rounded-lg font-bold flex-1 cursor-pointer pointer-events-auto">
+                                    {{ isSyncing ? '保存中...' : 'スプレッドシートへ保存' }}
                                 </button>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button 
-                                @click="syncFromGas" 
-                                :disabled="isSyncing"
-                                class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 text-[11px] shadow-xs"
-                            >
-                                <i class="fa-solid fa-cloud-arrow-down"></i>
-                                <span>スプレッドシートから読込</span>
-                            </button>
-                            <button 
-                                @click="syncToGas" 
-                                :disabled="isSyncing"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 text-[11px] shadow-xs"
-                            >
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>スプレッドシートへ保存</span>
-                            </button>
-                        </div>
-
-                        <div class="border-t border-slate-200 pt-2 space-y-1.5">
-                            <span class="font-bold text-slate-700 block text-[11px]">従来のCSV読込・出力</span>
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2">
+                            <span class="font-bold text-slate-700 block text-xs">CSVファイル入出力</span>
                             <div class="flex space-x-2">
-                                <input 
-                                    type="file" 
-                                    accept=".csv, text/csv" 
-                                    @change="handleCsvUpload" 
-                                    class="block flex-1 text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[11px] file:font-black file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer border border-slate-300 rounded-xl p-1 bg-slate-50"
-                                >
-                                <button 
-                                    @click="exportCurrentStateCsv" 
-                                    class="bg-slate-600 hover:bg-slate-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center space-x-1 text-[11px] shrink-0"
-                                >
+                                <button type="button" @click="exportCurrentStateCsv" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold shadow-xs transition flex items-center justify-center space-x-1 cursor-pointer pointer-events-auto">
                                     <i class="fa-solid fa-download"></i>
-                                    <span>CSV出力</span>
+                                    <span>CSVエクスポート</span>
                                 </button>
+                                <label class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-xl font-bold shadow-xs transition flex items-center justify-center space-x-1 cursor-pointer pointer-events-auto">
+                                    <i class="fa-solid fa-upload"></i>
+                                    <span>CSVインポート</span>
+                                    <input type="file" accept=".csv" @change="handleCsvUpload" class="hidden">
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex justify-end">
-                    <button @click="showResetModal = false" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg border border-slate-300 transition">
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end">
+                    <button type="button" @click="showResetModal = false" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold transition cursor-pointer pointer-events-auto">
                         閉じる
                     </button>
                 </div>
@@ -775,7 +721,7 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
         createApp({
             setup() {
@@ -857,10 +803,23 @@
                 const displayFloors = computed(() => rawFloors);
                 const rooms = ref({});
 
+                // フロアの表示状態（デフォルトすべてtrue）
+                const floorVisibility = ref({
+                    '8F': true,
+                    '7F': true,
+                    '6F': true,
+                    '5F': true,
+                    '4F': true,
+                    '3F': true,
+                    '2F': true,
+                    '1F': true,
+                    '低2F': true,
+                    '低1F': true
+                });
+
                 const toastMessage = ref('');
                 const showUnifiedHandoverModal = ref(false);
-                const spreadsheetCsvUrl = ref('');
-                const gasWebAppUrl = ref('');
+                const fixedGasWebAppUrl = "https://script.google.com/macros/s/AKfycbwbZ0L-cFK69WoYswCEe9l6EajdrBWyfkL0C_Wp4qORi1Ae-csKqrhSxMHE8bw-UOWh/exec";
                 const isSyncing = ref(false);
                 const showSingleRoomModalFlag = ref(false);
                 const targetRoomNo = ref('');
@@ -872,6 +831,7 @@
                 const isLocked = ref(true);
                 const inputPassword = ref('');
                 const passwordError = ref(false);
+                const FIXED_PASSWORD = 'park5211';
 
                 const batchModalTitle = ref('一括処理');
                 const batchModalIcon = ref('fa-solid fa-layer-group');
@@ -892,11 +852,14 @@
                 const currentWeather = ref('晴れ');
                 const weatherIcon = ref('fa-solid fa-sun text-amber-500');
 
+                // 2秒ごとに切り替えるための回転インデックス状態
+                const itemRotationIndex = ref(0);
+                let rotationTimer = null;
+
                 let pressTimer = null;
 
                 const verifyPassword = () => {
-                    const pass = localStorage.getItem('apartment_lock_pass_v44') || 'park5211';
-                    if (inputPassword.value.trim() === pass) {
+                    if (inputPassword.value.trim() === FIXED_PASSWORD) {
                         isLocked.value = false;
                         passwordError.value = false;
                         inputPassword.value = '';
@@ -918,6 +881,31 @@
                     currentTimeString.value = `${hours}:${minutes}`;
                 };
 
+                // 預かり物保持リストを取得するヘルパー
+                const getActiveItemsList = (roomNo) => {
+                    const r = rooms.value[roomNo];
+                    if (!r) return [];
+                    const list = [];
+                    if (r.parcel) list.push({ type: 'parcel', text: '【 荷物 】', class: 'bg-blue-600 text-white' });
+                    if (r.cleaning) list.push({ type: 'cleaning', text: '【 洗濯 】', class: 'bg-purple-600 text-white' });
+                    if (r.mail) list.push({ type: 'mail', text: '【 郵便 】', class: 'bg-rose-600 text-white' });
+                    return list;
+                };
+
+                const getCurrentRotatedItemText = (roomNo) => {
+                    const list = getActiveItemsList(roomNo);
+                    if (list.length === 0) return '';
+                    const idx = itemRotationIndex.value % list.length;
+                    return list[idx].text;
+                };
+
+                const getCurrentRotatedItemClass = (roomNo) => {
+                    const list = getActiveItemsList(roomNo);
+                    if (list.length === 0) return '';
+                    const idx = itemRotationIndex.value % list.length;
+                    return list[idx].class;
+                };
+
                 const showToast = (msg) => {
                     toastMessage.value = msg;
                     setTimeout(() => {
@@ -928,16 +916,16 @@
                 };
 
                 const initLocalStorage = () => {
-                    localStorage.setItem('apartment_lock_pass_v44', 'park5211');
-
-                    const savedGasUrl = localStorage.getItem('apartment_gas_url_v44');
-                    if (savedGasUrl) {
-                        gasWebAppUrl.value = savedGasUrl;
-                    } else {
-                        gasWebAppUrl.value = "https://script.google.com/macros/s/AKfycbwbZ0L-cFK69WoYswCEe9l6EajdrBWyfkL0C_Wp4qORi1Ae-csKqrhSxMHE8bw-UOWh/exec";
+                    const savedVisibility = localStorage.getItem('apartment_floor_visibility_v44');
+                    if (savedVisibility) {
+                        try {
+                            floorVisibility.value = JSON.parse(savedVisibility);
+                        } catch (e) {
+                            console.error("Floor visibility load error", e);
+                        }
                     }
 
-                    const saved = localStorage.getItem('apartment_rooms_state_v45');
+                    const saved = localStorage.getItem('apartment_rooms_state_v44');
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
@@ -989,25 +977,24 @@
 
                 const saveData = () => {
                     try {
-                        localStorage.setItem('apartment_rooms_state_v45', JSON.stringify(rooms.value));
+                        localStorage.setItem('apartment_rooms_state_v44', JSON.stringify(rooms.value));
                     } catch (e) {
                         console.error("Save error", e);
                     }
                 };
 
-                const saveGasUrl = () => {
-                    localStorage.setItem('apartment_gas_url_v44', gasWebAppUrl.value.trim());
-                    showToast('GAS URLを保存しました');
+                const saveFloorVisibility = () => {
+                    try {
+                        localStorage.setItem('apartment_floor_visibility_v44', JSON.stringify(floorVisibility.value));
+                    } catch (e) {
+                        console.error("Floor visibility save error", e);
+                    }
                 };
 
                 const syncFromGas = async () => {
-                    if (!gasWebAppUrl.value.trim()) {
-                        showToast('GAS WebアプリURLを入力してください');
-                        return;
-                    }
                     isSyncing.value = true;
                     try {
-                        const res = await fetch(gasWebAppUrl.value.trim());
+                        const res = await fetch(fixedGasWebAppUrl);
                         const json = await res.json();
                         if (json.status === 'success' && json.data) {
                             let count = 0;
@@ -1032,13 +1019,9 @@
                 };
 
                 const syncToGas = async () => {
-                    if (!gasWebAppUrl.value.trim()) {
-                        showToast('GAS WebアプリURLを入力してください');
-                        return;
-                    }
                     isSyncing.value = true;
                     try {
-                        const res = await fetch(gasWebAppUrl.value.trim(), {
+                        const res = await fetch(fixedGasWebAppUrl, {
                             method: 'POST',
                             body: JSON.stringify({ rooms: rooms.value })
                         });
@@ -1194,10 +1177,6 @@
                     }
                     saveData();
                     showToast(`${targetRoomNo.value}号室ステータス更新`);
-                };
-
-                const openLongAbsentPrompt = () => {
-                    isSettingLongAbsent.value = true;
                 };
 
                 const confirmLongAbsent = () => {
@@ -1515,15 +1494,25 @@
                     initLocalStorage();
                     updateDateTime();
                     setInterval(updateDateTime, 1000);
+
+                    // 2秒間隔でお預かり物アイコン・文字を切り替えるタイマー設定
+                    rotationTimer = setInterval(() => {
+                        itemRotationIndex.value++;
+                    }, 2000);
+                });
+
+                onUnmounted(() => {
+                    if (rotationTimer) clearInterval(rotationTimer);
                 });
 
                 return {
+                    rawFloors,
                     displayFloors,
+                    floorVisibility,
                     rooms,
                     toastMessage,
                     showUnifiedHandoverModal,
-                    spreadsheetCsvUrl,
-                    gasWebAppUrl,
+                    fixedGasWebAppUrl,
                     isSyncing,
                     showSingleRoomModalFlag,
                     targetRoomNo,
@@ -1546,6 +1535,9 @@
                     currentTimeString,
                     currentWeather,
                     weatherIcon,
+                    getActiveItemsList,
+                    getCurrentRotatedItemText,
+                    getCurrentRotatedItemClass,
                     verifyPassword,
                     showToast,
                     handleRoomClick,
@@ -1557,7 +1549,6 @@
                     countStatus,
                     setRoomContract,
                     setRoomStatus,
-                    openLongAbsentPrompt,
                     confirmLongAbsent,
                     toggleAirpay,
                     toggleRoomItem,
@@ -1576,7 +1567,7 @@
                     resetAllStatusAndItems,
                     exportCurrentStateCsv,
                     handleCsvUpload,
-                    saveGasUrl,
+                    saveFloorVisibility,
                     syncFromGas,
                     syncToGas
                 };
